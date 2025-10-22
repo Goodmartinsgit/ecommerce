@@ -6,7 +6,8 @@ import { Plus, Minus, ShoppingCart } from "lucide-react";
 // import { ProductContext } from "../Context/ProductContext";
 import Layout from "../shared/Layout/Layout";
 import { IoBagAddOutline } from "react-icons/io5";
-import { ProductContext } from "../context/ProductContext";
+import ProductContext from "../context/ProductContext";
+// import { ProductContext } from "../context/ProductContext";
 
 const Children = () => {
   const {
