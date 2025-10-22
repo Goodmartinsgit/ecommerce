@@ -1,8 +1,7 @@
 import { useContext, useState } from "react";
-// import { ProductContext } from "../Context/ProductContext";
 import Layout from "../shared/Layout/Layout";
 import { Trash2, Plus, Minus } from "lucide-react";
-import { ProductContext } from "../context/ProductContext";
+import ProductContext from "../context/NewProductContext";
 
 const Cart = () => {
   const { cartItems, HandleUpdateCartItem, HandleRemoveFromCart } = useContext(ProductContext);

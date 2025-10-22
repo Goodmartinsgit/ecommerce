@@ -1,9 +1,7 @@
 import { useContext, useEffect, useState } from "react";
-// import { ProductContext } from "../Context/ProductContext";
 import { useParams } from "react-router-dom";
 import Layout from "../shared/Layout/Layout";
-import ProductContext from "../context/ProductContext";
-// import { ProductContext } from "../context/ProductContext";
+import ProductContext from "../context/NewProductContext";
 
 const SingleProduct = () => {
   const { id } = useParams();

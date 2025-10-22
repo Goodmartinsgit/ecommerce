@@ -5,9 +5,8 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { Autoplay, Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
-// import { ProductContext } from '../../context/ProductContext';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import ProductContext from '../../context/ProductContext';
+import ProductContext from '../../context/NewProductContext';
 
 export default function SlideSwiper() {
   const { HandleGetProducts, productData } = useContext(ProductContext);

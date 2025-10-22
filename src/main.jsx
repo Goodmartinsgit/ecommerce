@@ -10,13 +10,12 @@ import NewArrival from "./pages/NewArrival.jsx";
 import MensCloth from "./pages/MensCloth.jsx";
 import WomensCloth from "./pages/WomensCloth.jsx";
 import Children from "./pages/Children.jsx";
-import { ProductProvider } from "./context/ProductContext.jsx";
-// import Home22 from "./pages/Home22.jsx";
 import SingleProduct from "./pages/SingleProduct.jsx";
 import UserLoginPage from "./pages/Auth/UserLoginPage.jsx";
 import Cart from "./pages/Cart.jsx";
 import BestSellersPage from "./pages/BestSellersPage.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import { ProductProvider } from "./context/NewProductContext.jsx";
 
 const router = createBrowserRouter([
   {

@@ -1,90 +1,3 @@
-// import { createContext, useEffect, useState } from "react";
-
-// export const ProductContext = createContext();
-
-// export const ProductProvider = ({ children }) => {
-//   const [productData, setProductData] = useState(null);
-//   const [isAuthentified, setIsAuthentified] = useState(false);
-//   const [cartCount, setCartCount] = useState(0);
-//   const [cartItems, setCartItems] = useState(
-//     JSON.parse(localStorage.getItem("cartItems")) || []
-//   );
-
-//   useEffect(() => {
-//     console.log("Cart:", cartItems);
-//     if (cartItems) {
-//       const count = cartItems?.reduce((acc, curr) => acc + curr?.quantity, 0);
-
-//       setCartCount(count);
-//     }
-//   }, [cartItems]);
-
-//   const HandleAddTCart = (prod, quantity = null, size = null, color = null) => {
-//     if (!isAuthentified) {
-//       //Get existing cart or initialize
-//       let storedCartItems = JSON.parse(localStorage.getItem("CartItems")) || [];
-
-//       //Find if product already exists in the cart
-//       const existingItem = storedCartItems.find(
-//         (item) => parseInt(item.id) === parseInt(prod.id)
-//       );
-
-//       let updatedCartitems;
-//       if (existingItem) {
-//         //Create a new arry with updated quantity for the exixting item
-//         updatedCartitems = storedCartItems.map((item) =>
-//           parseInt(item.id) === parseInt(prod.id)
-//             ? { ...item, quantity: item.quantity + quantity }
-//             : item
-//         );
-//       } else {
-//         //add a new product entry if it doesen't exixt
-//         updatedCartitems = [
-//           ...storedCartItems,
-//           { ...prod, quantity, size, color },
-//         ];
-//       }
-
-//       //Save updated cart in localStorage
-//       localStorage.setItem("CartItems", JSON.stringify(updatedCartitems));
-//       setCartItems(updatedCartitems);
-//       console.log("Updated cart:", updatedCartitems);
-//     } else {
-//       console.log("User is authenticated - handle API cart instead");
-//     }
-//   };
-
-//   const HandleGetProducts = async () => {
-//     try {
-//       const res = await fetch("http://localhost:8000/products", {
-//         method: "GET",
-//       });
-
-//       const data = await res.json();
-//       if (res.ok) {
-//         console.log(data);
-//         setProductData(data);
-//       } else {
-//         console.log("unable to fetch");
-//       }
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   };
-//   return (
-//     <ProductContext.Provider
-//       value={{ HandleGetProducts, productData, HandleAddTCart, cartItems, cartCount, setIsAuthentified }}
-//     >
-//       {children}
-//     </ProductContext.Provider>
-//   );
-// };
-
-
-
-
-
-
 
 import { createContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -285,3 +198,89 @@ const HandleUpdateCart = async (prod) => {
 };
 
 export default ProductContext;
+
+
+// import { createContext, useEffect, useState } from "react";
+
+// export const ProductContext = createContext();
+
+// export const ProductProvider = ({ children }) => {
+//   const [productData, setProductData] = useState(null);
+//   const [isAuthentified, setIsAuthentified] = useState(false);
+//   const [cartCount, setCartCount] = useState(0);
+//   const [cartItems, setCartItems] = useState(
+//     JSON.parse(localStorage.getItem("cartItems")) || []
+//   );
+
+//   useEffect(() => {
+//     console.log("Cart:", cartItems);
+//     if (cartItems) {
+//       const count = cartItems?.reduce((acc, curr) => acc + curr?.quantity, 0);
+
+//       setCartCount(count);
+//     }
+//   }, [cartItems]);
+
+//   const HandleAddTCart = (prod, quantity = null, size = null, color = null) => {
+//     if (!isAuthentified) {
+//       //Get existing cart or initialize
+//       let storedCartItems = JSON.parse(localStorage.getItem("CartItems")) || [];
+
+//       //Find if product already exists in the cart
+//       const existingItem = storedCartItems.find(
+//         (item) => parseInt(item.id) === parseInt(prod.id)
+//       );
+
+//       let updatedCartitems;
+//       if (existingItem) {
+//         //Create a new arry with updated quantity for the exixting item
+//         updatedCartitems = storedCartItems.map((item) =>
+//           parseInt(item.id) === parseInt(prod.id)
+//             ? { ...item, quantity: item.quantity + quantity }
+//             : item
+//         );
+//       } else {
+//         //add a new product entry if it doesen't exixt
+//         updatedCartitems = [
+//           ...storedCartItems,
+//           { ...prod, quantity, size, color },
+//         ];
+//       }
+
+//       //Save updated cart in localStorage
+//       localStorage.setItem("CartItems", JSON.stringify(updatedCartitems));
+//       setCartItems(updatedCartitems);
+//       console.log("Updated cart:", updatedCartitems);
+//     } else {
+//       console.log("User is authenticated - handle API cart instead");
+//     }
+//   };
+
+//   const HandleGetProducts = async () => {
+//     try {
+//       const res = await fetch("http://localhost:8000/products", {
+//         method: "GET",
+//       });
+
+//       const data = await res.json();
+//       if (res.ok) {
+//         console.log(data);
+//         setProductData(data);
+//       } else {
+//         console.log("unable to fetch");
+//       }
+//     } catch (error) {
+//       console.error(error);
+//     }
+//   };
+//   return (
+//     <ProductContext.Provider
+//       value={{ HandleGetProducts, productData, HandleAddTCart, cartItems, cartCount, setIsAuthentified }}
+//     >
+//       {children}
+//     </ProductContext.Provider>
+//   );
+// };
+
+
+

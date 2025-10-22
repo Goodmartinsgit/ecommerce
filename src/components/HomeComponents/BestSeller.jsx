@@ -147,11 +147,10 @@
 
 import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-// import { ProductContext } from "../../context/ProductContext";
 import { CiHeart } from "react-icons/ci";
 import { FaHeart } from "react-icons/fa";
 import { IoBagAdd, IoBagAddOutline } from "react-icons/io5";
-import ProductContext from "../../context/ProductContext";
+import ProductContext from "../../context/NewProductContext";
 
 const BestSeller = () => {
   const { HandleGetProducts, productData } = useContext(ProductContext);
