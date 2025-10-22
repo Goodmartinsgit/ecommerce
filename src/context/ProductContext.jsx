@@ -89,7 +89,7 @@
 import { createContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-export const ProductContext = createContext();
+const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
   const [productData, setProductData] = useState(null);
@@ -283,3 +283,5 @@ const HandleUpdateCart = async (prod) => {
     </ProductContext.Provider>
   );
 };
+
+export default ProductContext;

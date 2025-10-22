@@ -1,5 +1,6 @@
 import { useContext } from "react";
-import { ProductContext } from "../../Context/ProductContext";
+import ProductContext from "../../context/ProductContext";
+// import { ProductContext } from "../../Context/ProductContext";
 
 const Edit = ({
   prod,
