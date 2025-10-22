@@ -722,8 +722,8 @@ import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../shared/Layout/Layout";
 import Input from "../../shared/ClassInput";
-import { ProductContext } from "../../Context/ProductContext";
 import { Eye, EyeOff, LogIn, User, Settings } from "lucide-react";
+import { ProductContext } from "../../context/ProductContext";
 
 const UserLoginPage = () => {
   const { HandleLogin, isAuthenticated } = useContext(ProductContext);
