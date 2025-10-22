@@ -1,8 +1,9 @@
 import { Menu, Search, ShoppingBag } from "lucide-react";
 import { useContext, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { ProductContext } from "../../Context/ProductContext";
+// import { ProductContext } from "../../Context/ProductContext";
 import { User } from "lucide-react";
+import ProductContext from "../../context/ProductContext";
 
 const Navbar = () => {
   const { cartCount, isAuthenticated, user } = useContext(ProductContext);
