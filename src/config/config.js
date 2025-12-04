@@ -1,2 +1,2 @@
 // API Configuration
-export const baseUrl = "https://ecombackend-xpdc.onrender.com/api/";
+export const baseUrl = "https://ecombackend-xpdc.onrender.com/";
