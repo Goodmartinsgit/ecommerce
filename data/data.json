@@ -5,7 +5,7 @@
             "name": "Classic Cotton T-Shirt",
             "description": "Soft 100% cotton t-shirt with a round neck and regular fit.",
             "price": 25.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -38,7 +38,7 @@
             "name": "Slim Fit Jeans",
             "description": "Stylish slim-fit jeans made from durable denim.",
             "price": 49.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "30",
                 "32",
@@ -70,7 +70,7 @@
             "name": "Formal Blazer",
             "description": "Single-breasted blazer perfect for office or formal events.",
             "price": 120.0,
-            "currency": "USD",
+            "currency": "NGN",
             "newArrival": true,
             "sizes": [
                 "M",
@@ -101,7 +101,7 @@
             "name": "Casual Polo Shirt",
             "description": "Classic polo shirt with short sleeves and soft fabric.",
             "price": 29.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -133,7 +133,7 @@
             "name": "Leather Jacket",
             "description": "Stylish black leather jacket for a rugged look.",
             "price": 150.0,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "M",
                 "L",
@@ -162,7 +162,7 @@
             "name": "Hooded Sweatshirt",
             "description": "Comfortable hoodie made from soft cotton blend.",
             "price": 39.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -194,7 +194,7 @@
             "name": "Chino Pants",
             "description": "Slim-fit chinos for both casual and semi-formal wear.",
             "price": 44.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "30",
                 "32",
@@ -226,7 +226,7 @@
             "name": "Floral Summer Dress",
             "description": "Lightweight floral dress perfect for casual outings.",
             "price": 39.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "XS",
                 "S",
@@ -258,7 +258,7 @@
             "name": "High-Waisted Jeans",
             "description": "Stretchable high-rise jeans for comfort and style.",
             "price": 54.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "24",
                 "26",
@@ -290,7 +290,7 @@
             "name": "Knitted Sweater",
             "description": "Cozy knitted sweater with a soft feel.",
             "price": 45.0,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -321,7 +321,7 @@
             "name": "Pleated Skirt",
             "description": "Stylish pleated skirt for everyday wear.",
             "price": 34.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -352,7 +352,7 @@
             "name": "Long Coat",
             "description": "Elegant long coat perfect for cold seasons.",
             "price": 120.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "M",
                 "L",
@@ -383,7 +383,7 @@
             "name": "Denim Jacket",
             "description": "Trendy cropped denim jacket for a casual look.",
             "price": 65.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -412,7 +412,7 @@
             "name": "Cartoon T-Shirt",
             "description": "Colorful cartoon-themed t-shirt for kids.",
             "price": 15.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "2T",
                 "3T",
@@ -444,7 +444,7 @@
             "name": "Denim Overalls",
             "description": "Cute denim overalls for both boys and girls.",
             "price": 29.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "2T",
                 "3T",
@@ -475,7 +475,7 @@
             "name": "Winter Jacket",
             "description": "Warm padded jacket for children with zipper closure.",
             "price": 49.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -506,7 +506,7 @@
             "name": "Printed Hoodie",
             "description": "Soft printed hoodie for kids’ everyday wear.",
             "price": 27.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "4",
                 "6",
@@ -538,7 +538,7 @@
             "name": "Boys Cargo Shorts",
             "description": "Durable shorts with multiple pockets for comfort.",
             "price": 22.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "4",
                 "6",
@@ -570,7 +570,7 @@
             "name": "Girls Party Dress",
             "description": "Elegant dress for parties and events.",
             "price": 44.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "4",
                 "6",
@@ -602,7 +602,7 @@
             "name": "Casual Sneakers",
             "description": "Comfortable lace-up sneakers for kids.",
             "price": 35.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "4",
                 "5",
@@ -634,7 +634,7 @@
             "name": "Men’s Sports Shorts",
             "description": "Lightweight breathable shorts ideal for workouts and casual wear.",
             "price": 28.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -666,7 +666,7 @@
             "name": "Men’s Checked Shirt",
             "description": "Casual checked shirt with button closure and long sleeves.",
             "price": 39.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "M",
                 "L",
@@ -678,6 +678,7 @@
                 "blue",
                 "green"
             ],
+            "defaultColor": "red",
             "bestSeller": true,
             "image": "/images/man20.jpg",
             "category": "men",
@@ -695,7 +696,7 @@
             "name": "Men’s Sweatpants",
             "description": "Comfortable sweatpants with elastic waistband and side pockets.",
             "price": 35.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -727,7 +728,7 @@
             "name": "Men’s Winter Coat",
             "description": "Heavy-duty insulated coat with multiple pockets for warmth.",
             "price": 130.0,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "M",
                 "L",
@@ -757,7 +758,7 @@
             "name": "Men’s Running Shoes",
             "description": "Lightweight running shoes with breathable mesh upper.",
             "price": 75.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "40",
                 "41",
@@ -790,7 +791,7 @@
             "name": "Women’s Blouse",
             "description": "Elegant chiffon blouse perfect for office or casual wear.",
             "price": 42.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -821,7 +822,7 @@
             "name": "Women’s Yoga Pants",
             "description": "Stretchable yoga pants for maximum comfort during workouts.",
             "price": 36.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -853,7 +854,7 @@
             "name": "Women’s Cardigan",
             "description": "Soft open-front cardigan made from cozy knit fabric.",
             "price": 55.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -884,7 +885,7 @@
             "name": "Women’s Maxi Dress",
             "description": "Flowy maxi dress with floral prints, ideal for evening wear.",
             "price": 69.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -915,10 +916,11 @@
             "name": "Women’s Leather Handbag",
             "description": "Premium leather handbag with gold accents and ample space.",
             "price": 89.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "One Size"
             ],
+            "defaultSize": "One Size",
             "colors": [
                 "black",
                 "brown"
@@ -942,7 +944,7 @@
             "name": "Girls Denim Skirt",
             "description": "Cute denim skirt with adjustable waistband for girls.",
             "price": 24.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "4",
                 "6",
@@ -972,7 +974,7 @@
             "name": "Boys Graphic Hoodie",
             "description": "Soft fleece hoodie with cool printed graphics for boys.",
             "price": 29.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "6",
                 "8",
@@ -1004,7 +1006,7 @@
             "name": "Kids Raincoat",
             "description": "Waterproof raincoat with hood for kids.",
             "price": 33.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "4",
                 "6",
@@ -1036,7 +1038,7 @@
             "name": "Kids Pajama Set",
             "description": "Soft cotton pajama set for a cozy night’s sleep.",
             "price": 27.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "2T",
                 "4T",
@@ -1068,7 +1070,7 @@
             "name": "Men’s Linen Shirt",
             "description": "Breathable linen shirt ideal for warm weather.",
             "price": 52.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "M",
                 "L",
@@ -1099,7 +1101,7 @@
             "name": "Men’s Cargo Pants",
             "description": "Utility pants with multiple pockets and a relaxed fit.",
             "price": 59.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "30",
                 "32",
@@ -1131,7 +1133,7 @@
             "name": "Women’s Crop Top",
             "description": "Trendy ribbed crop top with short sleeves.",
             "price": 25.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -1162,7 +1164,7 @@
             "name": "Women’s Joggers",
             "description": "Soft cotton joggers with an elastic waistband.",
             "price": 39.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "S",
                 "M",
@@ -1194,7 +1196,7 @@
             "name": "Girls Ballet Flats",
             "description": "Comfortable slip-on flats for girls’ daily wear.",
             "price": 29.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "4",
                 "5",
@@ -1226,7 +1228,7 @@
             "name": "Kids Baseball Cap",
             "description": "Adjustable cotton baseball cap with cartoon design.",
             "price": 14.99,
-            "currency": "USD",
+            "currency": "NGN",
             "sizes": [
                 "One Size"
             ],

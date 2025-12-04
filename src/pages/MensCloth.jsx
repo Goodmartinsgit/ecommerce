@@ -2,17 +2,19 @@ import { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CiHeart } from "react-icons/ci";
 import { FaHeart } from "react-icons/fa";
-import { Plus, Minus, ShoppingCart } from "lucide-react";
+import { Plus, Minus, Sparkles } from "lucide-react";
 import Layout from "../shared/Layout/Layout";
 import { IoBagAddOutline } from "react-icons/io5";
 import ProductContext from "../context/NewProductContext";
-
+import LoadingSpinner from "../components/LoadingSpinner";
+import { getProductImage, handleImageError } from "../utils/imageHelper";
 
 const MensCloth = () => {
   const {
     HandleGetProducts,
     productData,
-    HandleAddTCart,
+    isLoadingProducts,
+    HandleAddToCart,
     HandleUpdateCartItem,
     HandleRemoveFromCart,
     cartItems,
@@ -21,13 +23,20 @@ const MensCloth = () => {
   const [favorites, setFavorites] = useState({});
 
   useEffect(() => {
-    HandleGetProducts();
+    if (!productData || productData.length === 0) {
+      HandleGetProducts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (productData && productData.length > 0) {
-      const femaleClothc = productData.filter((item) => item.category ===  "men");
-      setMensCloth(femaleClothc);
+      // Filter by category name (case-insensitive)
+      const mensCloth = productData.filter((item) =>
+        item?.category?.name?.toLowerCase().includes("men") ||
+        item?.category?.name?.toLowerCase() === "male"
+      );
+      setMensCloth(mensCloth);
     }
   }, [productData]);
 
@@ -39,20 +48,23 @@ const MensCloth = () => {
   };
   
 
-  const getCartItemIndex = (productId) => {
+  const getCartItemIndex = (productId, size, color) => {
     if (!cartItems) return -1;
     return cartItems.findIndex(
-      (item) => parseInt(item.id) === parseInt(productId)
+      (item) =>
+        parseInt(item.id) === parseInt(productId) &&
+        item.size === size &&
+        item.color === color
     );
   };
 
-  const getCartQuantity = (productId) => {
-    const index = getCartItemIndex(productId);
+  const getCartQuantity = (productId, size, color) => {
+    const index = getCartItemIndex(productId, size, color);
     return index !== -1 ? cartItems[index].quantity : 0;
   };
 
   const handleAddToCart = (product) => {
-    HandleAddTCart(
+    HandleAddToCart(
       product,
       1,
       product.defaultSize || "",
@@ -60,16 +72,16 @@ const MensCloth = () => {
     );
   };
 
-  const handleIncreaseQuantity = (productId) => {
-    const index = getCartItemIndex(productId);
+  const handleIncreaseQuantity = (productId, size, color) => {
+    const index = getCartItemIndex(productId, size, color);
     if (index !== -1) {
       const currentQuantity = cartItems[index].quantity;
       HandleUpdateCartItem(index, { quantity: currentQuantity + 1 });
     }
   };
 
-  const handleDecreaseQuantity = (productId) => {
-    const index = getCartItemIndex(productId);
+  const handleDecreaseQuantity = (productId, size, color) => {
+    const index = getCartItemIndex(productId, size, color);
     if (index !== -1) {
       const currentQuantity = cartItems[index].quantity;
       if (currentQuantity > 1) {
@@ -80,10 +92,18 @@ const MensCloth = () => {
     }
   };
 
+  if (isLoadingProducts) {
+    return (
+      <Layout>
+        <LoadingSpinner fullScreen={true} size="lg" />
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="bg-white min-h-screen py-8">
-      
+
         {/* DYNAMIC ADD TO CART BUTTON */}
         <div className="max-w-7xl mx-auto">
           <h1 className="text-center text-primary text-3xl font-bold mt-8">
@@ -107,22 +127,37 @@ const MensCloth = () => {
               {/* Product Grid - 4 columns */}
               <div className="px-4 md:px-10 lg:px-0 grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 md:gap-x-6 md:gap-y-12 gap-8 justify-center items-stretch lg:mt-6 mt-8">
                 {mensCloth.map((product) => {
-                  const cartQuantity = getCartQuantity(product.id);
+                  const cartQuantity = getCartQuantity(
+                    product.id,
+                    product.defaultSize || "",
+                    product.defaultColor || ""
+                  );
                   const isInCart = cartQuantity > 0;
 
                   return (
                     <div
                       key={product.id}
-                      className="hover:shadow-2xl transition ease-in-out duration-500 rounded-md overflow-hidden"
+                      className="hover:shadow-2xl transition ease-in-out duration-500 rounded-md overflow-hidden relative"
                     >
+                      {/* New Badge */}
+                      {product.newArrival && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <span className="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            NEW
+                          </span>
+                        </div>
+                      )}
+
                       <div className="w-full h-[20rem] overflow-hidden">
                         <Link
                           to={`/product/${product.id}`}
                           className="w-full h-full"
                         >
                           <img
-                            src={product.image}
+                            src={getProductImage(product.image)}
                             alt={product.name}
+                            onError={handleImageError}
                             className="object-cover w-full bg-gray-500 h-full"
                           />
                         </Link>
@@ -162,13 +197,17 @@ const MensCloth = () => {
                             >
                               {/* <ShoppingCart size={18} /> */}
                               <IoBagAddOutline className="h-5 w-5 " />
-                              Add to Cart
+                              Pick this
                             </button>
                           ) : (
                             <div className="flex items-center justify-between border-2 border-green-600 rounded-md bg-green-50">
                               <button
                                 onClick={() =>
-                                  handleDecreaseQuantity(product.id)
+                                  handleDecreaseQuantity(
+                                    product.id,
+                                    product.defaultSize || "",
+                                    product.defaultColor || ""
+                                  )
                                 }
                                 className="px-3 py-2 hover:bg-green-100 transition text-green-700"
                               >
@@ -179,7 +218,11 @@ const MensCloth = () => {
                               </span>
                               <button
                                 onClick={() =>
-                                  handleIncreaseQuantity(product.id)
+                                  handleIncreaseQuantity(
+                                    product.id,
+                                    product.defaultSize || "",
+                                    product.defaultColor || ""
+                                  )
                                 }
                                 className="px-3 py-2 hover:bg-green-100 transition text-green-700"
                               >

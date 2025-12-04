@@ -163,7 +163,7 @@ const Add = ({
             {/* <button
                 onClick={(e) => {
                   e.preventDefault();
-                  HandleAddTCart(
+                  HandleAddToCart(
                     product,
                     quantity,
                     selectedSize,

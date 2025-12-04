@@ -575,7 +575,7 @@ import ProductContext from "../context/NewProductContext";
 
 const SingleProduct = () => {
   const { id } = useParams();
-  const { productData, HandleGetProducts, HandleAddTCart, cartItems } = useContext(ProductContext);
+  const { productData, HandleGetProducts, HandleAddToCart, cartItems } = useContext(ProductContext);
 
   const [product, setProduct] = useState(null);
   const [selectedSize, setSelectedSize] = useState("");
@@ -585,7 +585,7 @@ const SingleProduct = () => {
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
 
   useEffect(() => {
-    if (!productData?.length > 0) {
+    if (!productData || productData.length === 0) {
       HandleGetProducts();
     }
   }, [HandleGetProducts, productData]);
@@ -613,7 +613,7 @@ const SingleProduct = () => {
       
       if (cartItem) {
         setIsInCart(true);
-        setCurrentCartQuantity(cartItems.quantity || 0);
+        setCurrentCartQuantity(cartItem.quantity || 0);
       } else {
         setIsInCart(false);
         setCurrentCartQuantity(0);
@@ -624,7 +624,7 @@ const SingleProduct = () => {
 
   const handleAddToCart = (e) => {
     e.preventDefault();
-    HandleAddTCart(product, quantity, selectedSize, selectedColor);
+    HandleAddToCart(product, quantity, selectedSize, selectedColor);
   };
 
   if (!product) {

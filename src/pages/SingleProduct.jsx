@@ -2,10 +2,11 @@ import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Layout from "../shared/Layout/Layout";
 import ProductContext from "../context/NewProductContext";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const SingleProduct = () => {
   const { id } = useParams();
-  const { productData, HandleGetProducts, HandleAddTCart, cartItems } =
+  const { productData, isLoadingProducts, HandleGetProducts, HandleAddToCart, cartItems } =
     useContext(ProductContext);
 
   const [product, setProduct] = useState(null);
@@ -16,10 +17,11 @@ const SingleProduct = () => {
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
 
   useEffect(() => {
-    if (!productData?.length > 0) {
+    if (!productData || productData.length === 0) {
       HandleGetProducts();
     }
-  }, [HandleGetProducts, productData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productData]);
 
   useEffect(() => {
     if (productData?.length > 0) {
@@ -44,7 +46,7 @@ const SingleProduct = () => {
 
       if (cartItem) {
         setIsInCart(true);
-        setCurrentCartQuantity(cartItems.quantity || 0);
+        setCurrentCartQuantity(cartItem.quantity || 0);
       } else {
         setIsInCart(false);
         setCurrentCartQuantity(0);
@@ -54,12 +56,14 @@ const SingleProduct = () => {
 
   const handleAddToCart = (e) => {
     e.preventDefault();
-    HandleAddTCart(product, quantity, selectedSize, selectedColor);
+    HandleAddToCart(product, quantity, selectedSize, selectedColor);
   };
 
-  if (!product) {
+  if (isLoadingProducts || !product) {
     return (
-      <p className="text-center text-gray-500 mt-10">Loading product...</p>
+      <Layout>
+        <LoadingSpinner fullScreen={true} size="lg" />
+      </Layout>
     );
   }
 
@@ -96,7 +100,7 @@ const SingleProduct = () => {
                   )}
                 </p>
                 <p className="text-sm text-gray-500 uppercase mt-1">
-                  Category: {product.category} → {product.subcategory}
+                  Category: {typeof product.category === 'object' ? product.category?.name : product.category} → {typeof product.subcategory === 'object' ? product.subcategory?.name : product.subcategory}
                 </p>
               </div>
 
@@ -226,7 +230,7 @@ const SingleProduct = () => {
                   onClick={handleAddToCart}
                   className="mt-4 w-full py-3 rounded-md transition-all font-medium bg-black hover:bg-gray-800 text-white"
                 >
-                  Add to Cart
+                  Pick this
                 </button>
               ) : (
                 <div className="mt-4 space-y-3">
@@ -235,7 +239,7 @@ const SingleProduct = () => {
                     className="w-full py-3 rounded-md font-medium bg-green-100 text-green-700 border-2 border-green-300 cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <span className="text-lg">✓</span>
-                    Added to Cart
+                    You've picked this item
                   </button>
 
                   <button

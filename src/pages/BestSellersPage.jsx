@@ -1,158 +1,20 @@
-// import { useContext, useEffect, useState } from "react";
-// import { Link } from "react-router-dom";
-// import { CiHeart } from "react-icons/ci";
-// import { FaHeart } from "react-icons/fa";
-// import { IoBagAdd, IoBagAddOutline } from "react-icons/io5";
-// import { ProductContext } from "../Context/ProductContext";
-// import Layout from "../shared/Layout/Layout";
-
-// const BestSellersPage = () => {
-//   const { HandleGetProducts, productData } = useContext(ProductContext);
-//   const [bestSeller, setBestSeller] = useState([]);
-//   const [favorites, setFavorites] = useState({});
-//   const [addToCart, setAddToCart] = useState({});
-
-//   useEffect(() => {
-//     HandleGetProducts();
-//   }, []);
-
-//   useEffect(() => {
-//     if (productData && productData.length > 0) {
-//       const found = productData.filter((item) => item.bestSeller === true);
-//       setBestSeller(found);
-//     }
-//   }, [productData]);
-
-//   const toggleFavorite = (productId) => {
-//     setFavorites((prev) => ({
-//       ...prev,
-//       [productId]: !prev[productId],
-//     }));
-//   };
-
-//   const toggleAddToCart = (productId) => {
-//     setAddToCart((prev) => ({
-//       ...prev,
-//       [productId]: !prev[productId],
-//     }));
-//   };
-
-//   return (
-//     <Layout>
-//       <div className="bg-white min-h-screen py-8">
-//         <div className="max-w-7xl mx-auto px-0">
-//           <h1 className="text-center text-primary text-3xl font-bold mt-8">
-//             All Best Sellers
-//           </h1>
-//           <p className="text-center text-primary mt-2 text-lg">
-//             Explore our complete collection of best-selling hoodies.
-//           </p>
-
-//           {bestSeller.length === 0 ? (
-//             <div className="text-center mt-16">
-//               <p className="text-gray-600 text-lg">No best sellers found.</p>
-//             </div>
-//           ) : (
-//             <>
-//               <p className="text-center text-gray-600 mt-4">
-//                 Showing {bestSeller.length} product{bestSeller.length !== 1 ? 's' : ''}
-//               </p>
-
-//               {/* Product Grid */}
-//               <div className="px-4 md:px-10 lg:px-0 grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 md:gap-x-6 md:gap-y-12 gap-8 justify-center items-stretch lg:mt-6 mt-8">
-//                 {bestSeller.map((product) => (
-//                   <div
-//                     key={product.id}
-//                     className="hover:shadow-2xl transition ease-in-out duration-500 rounded-md overflow-hidden"
-//                   >
-//                     <div className="w-full h-[26rem] overflow-hidden">
-//                       <Link to={`/product/${product.id}`} className="w-full h-full">
-//                         <img
-//                           src={product.image}
-//                           alt={product.name}
-//                           className="object-cover w-full bg-gray-500 h-full"
-//                         />
-//                       </Link>
-//                     </div>
-
-//                     <div className="p-2">
-//                       <p className="text-black font-bold mt-2">{product.name}</p>
-//                       <p className="text-black mt-2 line-clamp-2">
-//                         {product.description}
-//                       </p>
-
-//                       <div className="flex justify-between items-center mt-2">
-//                         <span className="p-2 bg-primary text-white rounded-md">
-//                           ₦{product.price}
-//                         </span>
-
-//                         <div className="flex gap-4 items-center">
-//                           <button
-//                             onClick={() => toggleFavorite(product.id)}
-//                             className="rounded-full p-1 bg-white border border-primary flex justify-center items-center cursor-pointer transition "
-//                           >
-//                             {favorites[product.id] ? (
-//                               <FaHeart className="h-6 w-6 text-red-500" />
-//                             ) : (
-//                               <CiHeart className="h-6 w-6"/>
-//                             )}
-//                           </button>
-//                           <button
-//                             onClick={() => toggleAddToCart(product.id)}
-//                             className="rounded-full p-1 bg-white border border-primary flex justify-center items-center cursor-pointer hover:bg-slate-300 hover:text-white transition"
-//                           >
-//                             {addToCart[product.id] ? (
-//                               <IoBagAdd className="h-6 w-6 text-green-700" />
-//                             ) : (
-//                               <IoBagAddOutline className="h-6 w-6 " />
-//                             )}
-//                           </button>
-//                         </div>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 ))}
-//               </div>
-
-//               {/* Back to Home Button */}
-//               <div className="flex justify-center mt-8 mb-8">
-//                 <Link
-//                   to="/"
-//                   className="rounded-md bg-white text-black border-2 border-primary cursor-pointer px-6 py-2 hover:bg-primary hover:text-white transition"
-//                 >
-//                   Back to Home
-//                 </Link>
-//               </div>
-//             </>
-//           )}
-//         </div>
-//       </div>
-//     </Layout>
-//   );
-// };
-
-// export default BestSellersPage;
-
-
-
-
-
-
-
 import { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CiHeart } from "react-icons/ci";
 import { FaHeart } from "react-icons/fa";
-import { Plus, Minus, ShoppingCart } from "lucide-react";
+import { Plus, Minus, Sparkles } from "lucide-react";
 import Layout from "../shared/Layout/Layout";
 import { IoBagAddOutline } from "react-icons/io5";
 import ProductContext from "../context/NewProductContext";
+import LoadingSpinner from "../components/LoadingSpinner";
+import { getProductImage, handleImageError } from "../utils/imageHelper";
 
 const BestSellersPage = () => {
   const {
     HandleGetProducts,
     productData,
-    HandleAddTCart,
+    isLoadingProducts,
+    HandleAddToCart,
     HandleUpdateCartItem,
     HandleRemoveFromCart,
     cartItems,
@@ -161,7 +23,10 @@ const BestSellersPage = () => {
   const [favorites, setFavorites] = useState({});
 
   useEffect(() => {
-    HandleGetProducts();
+    if (!productData || productData.length === 0) {
+      HandleGetProducts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -179,20 +44,23 @@ const BestSellersPage = () => {
   };
   
 
-  const getCartItemIndex = (productId) => {
+  const getCartItemIndex = (productId, size, color) => {
     if (!cartItems) return -1;
     return cartItems.findIndex(
-      (item) => parseInt(item.id) === parseInt(productId)
+      (item) =>
+        parseInt(item.id) === parseInt(productId) &&
+        item.size === size &&
+        item.color === color
     );
   };
 
-  const getCartQuantity = (productId) => {
-    const index = getCartItemIndex(productId);
+  const getCartQuantity = (productId, size, color) => {
+    const index = getCartItemIndex(productId, size, color);
     return index !== -1 ? cartItems[index].quantity : 0;
   };
 
   const handleAddToCart = (product) => {
-    HandleAddTCart(
+    HandleAddToCart(
       product,
       1,
       product.defaultSize || "",
@@ -200,16 +68,16 @@ const BestSellersPage = () => {
     );
   };
 
-  const handleIncreaseQuantity = (productId) => {
-    const index = getCartItemIndex(productId);
+  const handleIncreaseQuantity = (productId, size, color) => {
+    const index = getCartItemIndex(productId, size, color);
     if (index !== -1) {
       const currentQuantity = cartItems[index].quantity;
       HandleUpdateCartItem(index, { quantity: currentQuantity + 1 });
     }
   };
 
-  const handleDecreaseQuantity = (productId) => {
-    const index = getCartItemIndex(productId);
+  const handleDecreaseQuantity = (productId, size, color) => {
+    const index = getCartItemIndex(productId, size, color);
     if (index !== -1) {
       const currentQuantity = cartItems[index].quantity;
       if (currentQuantity > 1) {
@@ -220,11 +88,19 @@ const BestSellersPage = () => {
     }
   };
 
+  if (isLoadingProducts) {
+    return (
+      <Layout>
+        <LoadingSpinner fullScreen={true} size="lg" />
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="bg-white min-h-screen py-8">
         {/* NORMAL ADD TO CART BUTTON */}
-       
+
 
         {/* DYNAMIC ADD TO CART BUTTON */}
         <div className="max-w-7xl mx-auto">
@@ -249,22 +125,37 @@ const BestSellersPage = () => {
               {/* Product Grid - 4 columns */}
               <div className="px-4 md:px-10 lg:px-0 grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 md:gap-x-6 md:gap-y-12 gap-8 justify-center items-stretch lg:mt-6 mt-8">
                 {bestSeller.map((product) => {
-                  const cartQuantity = getCartQuantity(product.id);
+                  const cartQuantity = getCartQuantity(
+                    product.id,
+                    product.defaultSize || "",
+                    product.defaultColor || ""
+                  );
                   const isInCart = cartQuantity > 0;
 
                   return (
                     <div
                       key={product.id}
-                      className="hover:shadow-2xl transition ease-in-out duration-500 rounded-md overflow-hidden"
+                      className="hover:shadow-2xl transition ease-in-out duration-500 rounded-md overflow-hidden relative"
                     >
+                      {/* New Badge */}
+                      {product.newArrival && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <span className="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            NEW
+                          </span>
+                        </div>
+                      )}
+
                       <div className="w-full h-[20rem] overflow-hidden">
                         <Link
                           to={`/product/${product.id}`}
                           className="w-full h-full"
                         >
                           <img
-                            src={product.image}
+                            src={getProductImage(product.image)}
                             alt={product.name}
+                            onError={handleImageError}
                             className="object-cover w-full bg-gray-500 h-full"
                           />
                         </Link>
@@ -304,13 +195,18 @@ const BestSellersPage = () => {
                             >
                               {/* <ShoppingCart size={18} /> */}
                               <IoBagAddOutline className="h-5 w-5 " />
-                              Add to Cart
+                              Pick this
+                              
                             </button>
                           ) : (
                             <div className="flex items-center justify-between border-2 border-green-600 rounded-md bg-green-50">
                               <button
                                 onClick={() =>
-                                  handleDecreaseQuantity(product.id)
+                                  handleDecreaseQuantity(
+                                    product.id,
+                                    product.defaultSize || "",
+                                    product.defaultColor || ""
+                                  )
                                 }
                                 className="px-3 py-2 hover:bg-green-100 transition text-green-700"
                               >
@@ -321,7 +217,11 @@ const BestSellersPage = () => {
                               </span>
                               <button
                                 onClick={() =>
-                                  handleIncreaseQuantity(product.id)
+                                  handleIncreaseQuantity(
+                                    product.id,
+                                    product.defaultSize || "",
+                                    product.defaultColor || ""
+                                  )
                                 }
                                 className="px-3 py-2 hover:bg-green-100 transition text-green-700"
                               >

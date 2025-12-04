@@ -13,9 +13,15 @@ import Children from "./pages/Children.jsx";
 import SingleProduct from "./pages/SingleProduct.jsx";
 import UserLoginPage from "./pages/Auth/UserLoginPage.jsx";
 import Cart from "./pages/Cart.jsx";
+import Checkout from "./pages/Checkout.jsx";
 import BestSellersPage from "./pages/BestSellersPage.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import AdminDashboard from "./pages/Admin/AdminDashboard.jsx";
+import ProtectedAdminRoute from "./components/ProtectedAdminRoute.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { ProductProvider } from "./context/NewProductContext.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import VerifyPayment from "./pages/VerrifyPayment.jsx";
 
 const router = createBrowserRouter([
   {
@@ -55,8 +61,16 @@ const router = createBrowserRouter([
         path: "/cart",
       },
       {
+        element: <Checkout />,
+        path: "/checkout",
+      },
+      {
         element: <UserLoginPage />,
         path: "/userlogin",
+      },
+      {
+        element: <UserLoginPage />,
+        path: "/login",
       },
       {
         element: <SingleProduct />,
@@ -67,17 +81,35 @@ const router = createBrowserRouter([
         path: "/bestSellers",
       },
       {
-        element: <Dashboard/>,
+        element: <VerifyPayment/>,
+        path: "/verify-payment",
+      },
+      {
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
         path: "/dashboard",
+      },
+      {
+        element: (
+          <ProtectedAdminRoute>
+            <AdminDashboard />
+          </ProtectedAdminRoute>
+        ),
+        path: "/admin/dashboard",
       },
     ],
   },
 ]);
 
 createRoot(document.getElementById("root")).render(
-  <ProductProvider>
-    <StrictMode>
-      <RouterProvider router={router} />
-    </StrictMode>
-  </ProductProvider>
+  <StrictMode>
+    <ErrorBoundary>
+      <ProductProvider>
+        <RouterProvider router={router} />
+      </ProductProvider>
+    </ErrorBoundary>
+  </StrictMode>
 );

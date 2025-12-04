@@ -7,6 +7,7 @@ import { Autoplay, Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductContext from '../../context/NewProductContext';
+import { getProductImage, handleImageError } from '../../utils/imageHelper';
 
 export default function SlideSwiper() {
   const { HandleGetProducts, productData } = useContext(ProductContext);
@@ -14,7 +15,7 @@ export default function SlideSwiper() {
     
   useEffect(() => {
     HandleGetProducts();
-  }, []);
+  }, [HandleGetProducts]);
 
   const handleProductClick = (productId) => {
     navigate(`/product/${productId}`);
@@ -89,9 +90,10 @@ export default function SlideSwiper() {
                   }`}
                 >
                   <img
-                    src={product?.image}
+                    src={getProductImage(product?.image)}
                     alt={product?.name || `Fashion item ${index + 1}`}
                     loading="lazy"
+                    onError={handleImageError}
                     className="object-cover w-full h-full bg-gray-500 transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className={`absolute inset-0 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 ${

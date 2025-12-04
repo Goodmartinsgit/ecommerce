@@ -3,7 +3,6 @@ import { createContext, useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import { baseUrl } from "../config/config";
 import { addToCart as addToCartAPI, getCart as getCartAPI, updateCart as updateCartAPI, deleteFromCart as deleteFromCartAPI } from "../Services/CartServices";
-import { addToWishlist as addToWishlistAPI, removeFromWishlist as removeFromWishlistAPI, getWishlist as getWishlistAPI } from "../Services/WishlistServices";
 import { isAuthenticated as isValidToken } from "../utils/auth";
 
 const ProductContext = createContext();
@@ -15,10 +14,6 @@ export const ProductProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(
     JSON.parse(localStorage.getItem("CartItems")) || []
   );
-  const [wishlistItems, setWishlistItems] = useState(
-    JSON.parse(localStorage.getItem("WishlistItems")) || []
-  );
-  const [wishlistCount, setWishlistCount] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
@@ -29,11 +24,6 @@ export const ProductProvider = ({ children }) => {
       setCartCount(count);
     }
   }, [cartItems]);
-  useEffect(() => {
-    if (wishlistItems && Array.isArray(wishlistItems)) {
-      setWishlistCount(wishlistItems.length);
-    }
-  }, [wishlistItems]);
 
   const HandleAddToCart = async (prod, quantity = 1, size = null, color = null) => {
     // Always update localStorage for guest cart
@@ -164,83 +154,6 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
-  // Wishlist Functions
-  const HandleToggleWishlist = async (product) => {
-    // Check if product is already in wishlist
-    let storedWishlistItems = JSON.parse(localStorage.getItem("WishlistItems")) || [];
-    const existingIndex = storedWishlistItems.findIndex(
-      (item) => parseInt(item.id) === parseInt(product.id)
-    );
-
-    let updatedWishlistItems;
-    if (existingIndex !== -1) {
-      // Remove from wishlist
-      updatedWishlistItems = storedWishlistItems.filter(
-        (item) => parseInt(item.id) !== parseInt(product.id)
-      );
-      toast.success("Removed from wishlist");
-
-      // If authenticated, sync with backend
-      if (isAuthenticated && user) {
-        try {
-          const token = localStorage.getItem("token");
-          await removeFromWishlistAPI(product.id, token);
-        } catch (error) {
-          console.error("Failed to sync wishlist removal with backend:", error);
-        }
-      }
-    } else {
-      // Add to wishlist
-      updatedWishlistItems = [...storedWishlistItems, product];
-      toast.success("Added to wishlist");
-
-      // If authenticated, sync with backend
-      if (isAuthenticated && user) {
-        try {
-          const token = localStorage.getItem("token");
-          const response = await addToWishlistAPI(product.id, token);
-
-          if (!response.ok && response.data?.message === "Product already in wishlist") {
-            // Backend says it's already there, update local state
-            const backendWishlist = await HandleGetWishlist();
-            if (backendWishlist) {
-              return;
-            }
-          }
-        } catch (error) {
-          console.error("Failed to sync wishlist addition with backend:", error);
-        }
-      }
-    }
-
-    // Save to localStorage and update state
-    localStorage.setItem("WishlistItems", JSON.stringify(updatedWishlistItems));
-    setWishlistItems(updatedWishlistItems);
-  };
-
-  const HandleGetWishlist = async () => {
-    if (isAuthenticated && user) {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await getWishlistAPI(token);
-
-        if (response.ok && response.data) {
-          const wishlistProducts = response.data.items?.map(item => item.product) || [];
-          setWishlistItems(wishlistProducts);
-          localStorage.setItem("WishlistItems", JSON.stringify(wishlistProducts));
-          return wishlistProducts;
-        }
-      } catch (error) {
-        console.error("Failed to fetch wishlist:", error);
-      }
-    }
-    return wishlistItems;
-  };
-
-  const IsInWishlist = (productId) => {
-    return wishlistItems.some((item) => parseInt(item.id) === parseInt(productId));
-  };
-
   const HandleGetProducts = useCallback(async () => {
     if (isLoadingProducts) return; // Prevent duplicate fetches
 
@@ -314,8 +227,6 @@ export const ProductProvider = ({ children }) => {
     if (storedToken) {
       setToken(storedToken);
     }
-    // Fetch wishlist after login
-    HandleGetWishlist();
   };
 
   const HandleLogout = () => {
@@ -325,8 +236,6 @@ export const ProductProvider = ({ children }) => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     localStorage.removeItem("CartItems");
-    localStorage.removeItem("WishlistItems");
-    setWishlistItems([]);
   };
   const HandleUpdateCart = async (prod) => {
     try {
@@ -392,12 +301,6 @@ export const ProductProvider = ({ children }) => {
         cartItems,
         setCartItems,
         cartCount,
-        wishlistItems,
-        setWishlistItems,
-        wishlistCount,
-        HandleToggleWishlist,
-        HandleGetWishlist,
-        IsInWishlist,
         isAuthenticated,
         user,
         token,

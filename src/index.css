@@ -1,5 +1,28 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind v4 Theme Configuration */
+@theme {
+  --color-primary: #000000;
+
+  --font-family-space: "Space Grotesk", sans-serif;
+}
+
+/* Optional custom styles */
+
+/* Page transition loader animation */
+@keyframes progress-bar {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 70%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-progress-bar {
+  animation: progress-bar 0.3s ease-in-out;
+}
