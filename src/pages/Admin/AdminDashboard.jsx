@@ -81,6 +81,13 @@ const AdminDashboard = () => {
       
       if (userStatsRes.status === 500 || orderStatsRes.status === 500) {
         console.warn('Server error - skipping admin stats fetch');
+        // Set default stats to prevent UI issues
+        setStats({
+          totalUsers: 0,
+          totalOrders: 0,
+          totalProducts: products ? products.length : 0,
+          totalRevenue: 0,
+        });
         return;
       }
 
@@ -96,9 +103,23 @@ const AdminDashboard = () => {
         });
       } else {
         console.warn('Admin stats fetch failed:', userStats.message || orderStats.message);
+        // Set default stats on failure
+        setStats({
+          totalUsers: 0,
+          totalOrders: 0,
+          totalProducts: products ? products.length : 0,
+          totalRevenue: 0,
+        });
       }
     } catch (error) {
       console.error("Error fetching stats:", error);
+      // Set default stats on error
+      setStats({
+        totalUsers: 0,
+        totalOrders: 0,
+        totalProducts: products ? products.length : 0,
+        totalRevenue: 0,
+      });
     }
   };
 
@@ -216,7 +237,7 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (products && products.length > 0) {
+    if (products && products.length >= 0) { // Allow 0 products
       fetchStats();
     }
   }, [products?.length]); // Only depend on products length to prevent infinite loops

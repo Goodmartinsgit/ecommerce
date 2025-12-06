@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "../shared/Layout/Layout";
 import ProductContext from "../context/NewProductContext";
@@ -41,6 +41,7 @@ export default function Dashboard() {
     completedOrders: 0,
     totalSpent: 0
   });
+  const initialFetchDone = useRef(false);
 
   // Set active section from URL parameter
   useEffect(() => {
@@ -64,7 +65,8 @@ export default function Dashboard() {
 
   // Fetch user data on mount
   useEffect(() => {
-    if (isAuthenticated && user && !loading) {
+    if (isAuthenticated && user?.id && !loading && !initialFetchDone.current) {
+      initialFetchDone.current = true;
       setLoading(true);
       Promise.all([
         fetchOrders(),
@@ -140,11 +142,19 @@ export default function Dashboard() {
       
       if (res.status === 401) {
         console.warn('Unauthorized - invalid token');
+        HandleLogout(); // Logout if token is invalid
         return;
       }
       
       if (res.status === 500) {
         console.warn('Server error - skipping stats fetch');
+        // Set default stats to prevent UI issues
+        setStats({
+          totalOrders: 0,
+          pendingOrders: 0,
+          completedOrders: 0,
+          totalSpent: 0
+        });
         return;
       }
       
@@ -153,9 +163,23 @@ export default function Dashboard() {
         setStats(data.data);
       } else {
         console.warn('Stats fetch failed:', data.message);
+        // Set default stats on failure
+        setStats({
+          totalOrders: 0,
+          pendingOrders: 0,
+          completedOrders: 0,
+          totalSpent: 0
+        });
       }
     } catch (error) {
       console.error('Failed to fetch stats:', error);
+      // Set default stats on error
+      setStats({
+        totalOrders: 0,
+        pendingOrders: 0,
+        completedOrders: 0,
+        totalSpent: 0
+      });
     }
   };
 
