@@ -275,7 +275,7 @@ function NavButton({ icon, label, active, onClick, badge }) {
       </div>
       {badge > 0 && (
         <span className={`px-2 py-0.5 text-xs rounded-full ${
-          isWishlist ? "bg-red-500 text-white" : (active ? "bg-white text-black" : "bg-gray-200 text-black")
+          isWishlist ? "bg-orange-500 text-white" : (active ? "bg-white text-black" : "bg-gray-200 text-black")
         }`}>
           {badge}
         </span>
@@ -397,7 +397,7 @@ function QuickAction({ icon, label, onClick, badge }) {
       className="relative flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-gray-200 hover:border-black hover:bg-gray-50 transition-all group"
     >
       {badge > 0 && (
-        <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+        <span className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
           {badge}
         </span>
       )}
