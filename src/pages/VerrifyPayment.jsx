@@ -340,7 +340,7 @@ export default function VerifyPayment() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => window.print()}
-                className="flex-1 px-6 py-3 rounded-xl border border-green-500 hover:bg-green-500 hover:text-white transition-all duration-300"
+                className="flex-1 px-6 py-3 rounded-xl border border-black hover:bg-black hover:text-white transition-all duration-300"
               >
                 Print Receipt
               </motion.button>
@@ -348,7 +348,7 @@ export default function VerifyPayment() {
                 href="/"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex-1 px-6 py-3 rounded-xl bg-green-500 text-white hover:bg-white hover:text-green-500 border border-green-500 transition-all duration-300 text-center"
+                className="flex-1 px-6 py-3 rounded-xl bg-black text-white hover:bg-white hover:text-black border border-black transition-all duration-300 text-center"
               >
                 Continue Shopping
               </motion.a>
