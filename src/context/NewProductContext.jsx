@@ -248,6 +248,11 @@ export const ProductProvider = ({ children }) => {
         
         const response = await getWishlistAPI(token);
 
+        if (response.status === 429) {
+          console.warn('Rate limited - skipping wishlist fetch');
+          return wishlistItems;
+        }
+
         if (response.ok && response.data) {
           const wishlistProducts = response.data.items?.map(item => item.product) || [];
           setWishlistItems(wishlistProducts);
@@ -268,7 +273,7 @@ export const ProductProvider = ({ children }) => {
   };
 
   const HandleGetProducts = useCallback(async () => {
-    if (isLoadingProducts) return; // Prevent duplicate fetches
+    if (isLoadingProducts) return;
 
     try {
       setIsLoadingProducts(true);
@@ -276,21 +281,23 @@ export const ProductProvider = ({ children }) => {
         method: "GET",
       });
 
+      if (res.status === 429) {
+        console.warn('Rate limited - skipping products fetch');
+        return;
+      }
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
 
       const response = await res.json();
-      // Backend returns { success, message, data } - extract the data array
       if (response.success && response.data) {
         setProductData(response.data);
       } else {
-        console.error('Invalid response format:', response);
         setProductData([]);
       }
     } catch (error) {
       console.error('Failed to fetch products:', error);
-      toast.error(`Failed to fetch products: ${error.message}`);
       setProductData([]);
     } finally {
       setIsLoadingProducts(false);
@@ -304,12 +311,10 @@ export const ProductProvider = ({ children }) => {
 
     if (storedUser && token) {
       try {
-        // Verify token is still valid
         if (isValidToken()) {
           setUser(JSON.parse(storedUser));
           setIsAuthenticated(true);
         } else {
-          // Token expired, clear everything
           localStorage.removeItem("user");
           localStorage.removeItem("token");
           setUser(null);
@@ -324,11 +329,10 @@ export const ProductProvider = ({ children }) => {
       }
     }
 
-    // Fetch products once on app load
-    if (!productData && !isLoadingProducts) {
+    // Fetch products once on app load - only if not already loaded
+    if (!productData) {
       HandleGetProducts();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const HandleLogin = async (userData) => {

@@ -63,13 +63,18 @@ export default function Dashboard() {
 
   // Fetch user data on mount
   useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchOrders();
-      fetchAddresses();
-      fetchStats();
-      HandleGetWishlist();
+    if (isAuthenticated && user && !loading) {
+      setLoading(true);
+      Promise.all([
+        fetchOrders(),
+        fetchAddresses(), 
+        fetchStats(),
+        HandleGetWishlist()
+      ]).finally(() => {
+        setLoading(false);
+      });
     }
-  }, [isAuthenticated, user, HandleGetWishlist]);
+  }, [isAuthenticated, user]);
 
   const fetchOrders = async () => {
     try {
@@ -79,6 +84,10 @@ export default function Dashboard() {
           'Authorization': `Bearer ${token}`
         }
       });
+      if (res.status === 429) {
+        console.warn('Rate limited - skipping orders fetch');
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setOrders(data.data.orders || []);
@@ -96,6 +105,10 @@ export default function Dashboard() {
           'Authorization': `Bearer ${token}`
         }
       });
+      if (res.status === 429) {
+        console.warn('Rate limited - skipping addresses fetch');
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setAddresses(data.data || []);
@@ -113,6 +126,10 @@ export default function Dashboard() {
           'Authorization': `Bearer ${token}`
         }
       });
+      if (res.status === 429) {
+        console.warn('Rate limited - skipping stats fetch');
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setStats(data.data);
