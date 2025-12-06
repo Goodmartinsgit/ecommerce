@@ -21,7 +21,8 @@ import {
   Lock,
   Mail,
   Phone,
-  Home
+  Home,
+  Star
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { baseUrl } from "../config/config";
@@ -412,20 +413,23 @@ function QuickAction({ icon, label, onClick, badge }) {
 }
 
 // Order Card Component
-function OrderCard({ order, compact = false }) {
+function OrderCard({ order, compact = false, onViewDetails, onWriteReview }) {
   const getStatusColor = (status) => {
     switch (status?.toUpperCase()) {
-      case 'COMPLETED': return 'bg-green-100 text-green-700';
+      case 'DELIVERED': return 'bg-green-100 text-green-700';
+      case 'SHIPPED': return 'bg-blue-100 text-blue-700';
+      case 'PROCESSING': return 'bg-yellow-100 text-yellow-700';
       case 'PENDING': return 'bg-orange-100 text-orange-700';
-      case 'FAILED': return 'bg-red-100 text-red-700';
-      case 'CANCELLED': return 'bg-gray-100 text-gray-700';
-      default: return 'bg-blue-100 text-blue-700';
+      case 'CANCELLED': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
+  const canReview = order.status?.toUpperCase() === 'DELIVERED' && !order.hasReview;
+
   return (
     <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-3">
         <div>
           <p className="font-semibold">Order #{order.orderId}</p>
           <p className="text-sm text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</p>
@@ -437,32 +441,92 @@ function OrderCard({ order, compact = false }) {
           </span>
         </div>
       </div>
+      {!compact && (
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={() => onViewDetails(order)}
+            className="flex-1 text-sm border border-gray-300 px-3 py-1 rounded hover:bg-gray-50"
+          >
+            View Details
+          </button>
+          {canReview && (
+            <button
+              onClick={() => onWriteReview(order)}
+              className="flex-1 text-sm bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
+            >
+              Write Review
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-// Orders Section - Full implementation will follow
+// Orders Section
 function OrdersSection({ orders, onRefresh }) {
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewOrder, setReviewOrder] = useState(null);
+
+  const handleViewDetails = (order) => {
+    setSelectedOrder(order);
+  };
+
+  const handleWriteReview = (order) => {
+    setReviewOrder(order);
+    setShowReviewModal(true);
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h2 className="text-2xl font-bold mb-6">My Orders</h2>
-      {orders.length === 0 ? (
-        <div className="text-center py-12">
-          <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-          <p className="text-gray-500 mb-4">No orders found</p>
-          <button
-            onClick={() => window.location.href = '/'}
-            className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800"
-          >
-            Start Shopping
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
-          ))}
-        </div>
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h2 className="text-2xl font-bold mb-6">My Orders</h2>
+        {orders.length === 0 ? (
+          <div className="text-center py-12">
+            <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <p className="text-gray-500 mb-4">No orders found</p>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800"
+            >
+              Start Shopping
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {orders.map((order) => (
+              <OrderCard 
+                key={order.id} 
+                order={order} 
+                onViewDetails={handleViewDetails}
+                onWriteReview={handleWriteReview}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {selectedOrder && (
+        <OrderDetailsModal 
+          order={selectedOrder} 
+          onClose={() => setSelectedOrder(null)} 
+        />
+      )}
+      
+      {showReviewModal && reviewOrder && (
+        <ReviewModal 
+          order={reviewOrder}
+          onClose={() => {
+            setShowReviewModal(false);
+            setReviewOrder(null);
+          }}
+          onSubmit={() => {
+            onRefresh();
+            setShowReviewModal(false);
+            setReviewOrder(null);
+          }}
+        />
       )}
     </div>
   );
@@ -744,5 +808,234 @@ function PasswordChangeForm() {
         Update Password
       </button>
     </form>
+  );
+}
+
+// Order Details Modal
+function OrderDetailsModal({ order, onClose }) {
+  const getOrderStages = (status) => {
+    const stages = [
+      { key: 'PENDING', label: 'Order Placed', icon: <Package className="w-4 h-4" /> },
+      { key: 'PROCESSING', label: 'Processing', icon: <Clock className="w-4 h-4" /> },
+      { key: 'SHIPPED', label: 'Shipped', icon: <TrendingUp className="w-4 h-4" /> },
+      { key: 'DELIVERED', label: 'Delivered', icon: <ShoppingBag className="w-4 h-4" /> }
+    ];
+    
+    const currentIndex = stages.findIndex(stage => stage.key === status?.toUpperCase());
+    return stages.map((stage, index) => ({
+      ...stage,
+      completed: index <= currentIndex,
+      active: index === currentIndex
+    }));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Order Details</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <Plus className="w-6 h-6 rotate-45" />
+          </button>
+        </div>
+        
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Order ID</p>
+              <p className="font-semibold">#{order.orderId}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Order Date</p>
+              <p className="font-semibold">{new Date(order.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Amount</p>
+              <p className="font-semibold text-lg">₦{order.amount?.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Status</p>
+              <p className="font-semibold">{order.status}</p>
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold mb-4">Order Progress</h3>
+            <div className="space-y-4">
+              {getOrderStages(order.status).map((stage, index) => (
+                <div key={stage.key} className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    stage.completed ? 'bg-green-500 text-white' : 
+                    stage.active ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'
+                  }`}>
+                    {stage.icon}
+                  </div>
+                  <div className="flex-1">
+                    <p className={`font-medium ${
+                      stage.completed ? 'text-green-700' : 
+                      stage.active ? 'text-blue-700' : 'text-gray-500'
+                    }`}>
+                      {stage.label}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {order.trackingNumber && (
+            <div>
+              <p className="text-sm text-gray-600">Tracking Number</p>
+              <p className="font-mono bg-gray-100 p-2 rounded">{order.trackingNumber}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Review Modal
+function ReviewModal({ order, onClose, onSubmit }) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + images.length > 5) {
+      toast.error('Maximum 5 images allowed');
+      return;
+    }
+    setImages(prev => [...prev, ...files]);
+  };
+
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('orderId', order.id);
+      formData.append('rating', rating);
+      formData.append('comment', comment);
+      images.forEach(image => formData.append('images', image));
+      
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${baseUrl}reviews`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Review submitted successfully');
+        onSubmit();
+      } else {
+        toast.error(data.message || 'Failed to submit review');
+      }
+    } catch (error) {
+      toast.error('An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-lg w-full mx-4">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold">Write Review</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <Plus className="w-6 h-6 rotate-45" />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Rating</label>
+            <div className="flex gap-1">
+              {[1,2,3,4,5].map(star => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className={`text-2xl ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">Comment</label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg h-24"
+              placeholder="Share your experience..."
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">Images (Optional)</label>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="w-full px-3 py-2 border rounded-lg"
+            />
+            {images.length > 0 && (
+              <div className="flex gap-2 mt-2 flex-wrap">
+                {images.map((image, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={URL.createObjectURL(image)}
+                      alt="Preview"
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 bg-black text-white py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+            >
+              {loading ? 'Submitting...' : 'Submit Review'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
