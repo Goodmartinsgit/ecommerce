@@ -411,206 +411,353 @@
 
 
 
+// OPTION 1: Fetch Payment Key from Backend API
+// This is the MOST SECURE approach - recommended for production
 
-// Improved payment initialization with better error handling and validation
-const handleInitializePayment = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
-
+// Create a new service file: Services/PaymentServices.js
+export const getPaymentConfig = async (token) => {
   try {
-    // 1. Validate authentication
+    const response = await fetch(`${baseUrl}/api/payment/config`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch payment configuration');
+    }
+    
+    const data = await response.json();
+    return {
+      publicKey: data.flutterwavePublicKey,
+      currency: data.currency || 'NGN'
+    };
+  } catch (error) {
+    console.error('Error fetching payment config:', error);
+    throw error;
+  }
+};
+
+// Updated Checkout Component with Backend API
+import { useContext, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Layout from "../shared/Layout/Layout";
+import { Package, CreditCard, Lock, Loader2 } from "lucide-react";
+import ProductContext from "../context/NewProductContext";
+import { toast } from "react-toastify";
+import { baseUrl } from "../config/config";
+import { addToCart as addToCartAPI } from "../Services/CartServices";
+import { getPaymentConfig } from "../Services/PaymentServices";
+
+const Checkout = () => {
+  const { cartItems, isAuthenticated, user, token } = useContext(ProductContext);
+  const navigate = useNavigate();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [paymentConfig, setPaymentConfig] = useState(null);
+
+  // Fetch payment configuration on mount
+  useEffect(() => {
+    const fetchPaymentConfig = async () => {
+      try {
+        const authToken = localStorage.getItem('token');
+        if (authToken) {
+          const config = await getPaymentConfig(authToken);
+          setPaymentConfig(config);
+        }
+      } catch (error) {
+        console.error('Failed to load payment configuration:', error);
+        toast.error('Failed to load payment settings');
+      }
+    };
+
+    fetchPaymentConfig();
+  }, []);
+
+  // Check authentication
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
+    const timer = setTimeout(() => {
+      setIsCheckingAuth(false);
+      if (!token || !storedUser) {
+        toast.info("Please log in to proceed with checkout");
+        navigate("/login?returnUrl=/checkout");
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
+  // Calculate totals
+  const subtotal = useMemo(
+    () => cartItems?.reduce((acc, item) => acc + (item.price * item.quantity), 0) || 0,
+    [cartItems]
+  );
+  const tax = useMemo(() => subtotal * 0.1, [subtotal]);
+  const shipping = 0;
+  const total = useMemo(() => subtotal + tax + shipping, [subtotal, tax, shipping]);
+
+  // Sync cart to backend
+  const syncCartToBackend = async () => {
     const authToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
 
-    if (!authToken || !storedUser) {
-      toast.error("Please login to continue");
-      navigate("/login?returnUrl=/checkout");
-      return;
+    if (!authToken || !storedUser || !cartItems || cartItems.length === 0) {
+      return false;
     }
 
-    // 2. Validate cart
-    if (!cartItems || cartItems.length === 0) {
-      toast.error("Your cart is empty");
-      return;
+    try {
+      const userData = JSON.parse(storedUser);
+      const syncPromises = cartItems.map(async (item) => {
+        try {
+          const response = await addToCartAPI(
+            userData.id,
+            item.id,
+            item.color || null,
+            item.size || null,
+            item.quantity || 1,
+            authToken
+          );
+          return response.ok;
+        } catch (error) {
+          console.error(`Failed to sync item ${item.id}:`, error);
+          return false;
+        }
+      });
+
+      const results = await Promise.all(syncPromises);
+      return results.filter(r => r).length > 0;
+    } catch (error) {
+      console.error('Cart sync error:', error);
+      return false;
     }
+  };
 
-    // 3. Validate Flutterwave configuration
-    if (!flutterwavePublicKey || flutterwavePublicKey === 'undefined') {
-      console.error('Flutterwave public key not configured');
-      toast.error("Payment service not configured. Please contact support.");
-      return;
-    }
+  // Initialize payment with backend key
+  const handleInitializePayment = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-    // 4. Sync cart to backend
-    toast.info("Preparing your order...");
-    const syncSuccess = await syncCartToBackend();
-    
-    if (!syncSuccess) {
-      toast.error("Failed to prepare order. Please try again.");
-      return;
-    }
+    try {
+      const authToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
 
-    // 5. Generate unique order reference
-    const userData = JSON.parse(storedUser);
-    const orderId = `ORDER_${Date.now()}_${userData.id}_${Math.random().toString(36).substr(2, 9)}`;
+      if (!authToken || !storedUser) {
+        toast.error("Please login to continue");
+        navigate("/login?returnUrl=/checkout");
+        return;
+      }
 
-    // 6. Prepare order summary (not full cart data)
-    const orderSummary = {
-      itemCount: cartItems.length,
-      subtotal: subtotal,
-      tax: tax,
-      total: total,
-      timestamp: new Date().toISOString()
-    };
+      if (!cartItems || cartItems.length === 0) {
+        toast.error("Your cart is empty");
+        return;
+      }
 
-    // 7. Configure Flutterwave payment
-    const paymentConfig = {
-      public_key: flutterwavePublicKey,
-      tx_ref: orderId,
-      amount: Math.round(total * 100) / 100, // Ensure 2 decimal places
-      currency: "NGN",
-      payment_options: "card,mobilemoney,ussd",
-      redirect_url: `${window.location.origin}/verify-payment`,
-      customer: {
-        email: userData.email,
-        phone_number: userData.phone || "",
-        name: `${userData.firstname || ""} ${userData.lastname || ""}`.trim()
-      },
-      customizations: {
-        title: "Grandeur Store",
-        description: `Order for ${cartItems.length} item(s)`,
-        logo: `${window.location.origin}/logo.png` // Add your logo URL
-      },
-      meta: {
-        userId: userData.id,
-        orderId: orderId,
-        itemCount: cartItems.length,
-        // Store order summary, not full cart
-        orderSummary: JSON.stringify(orderSummary)
-      },
-      callback: function(response) {
-        console.log("Payment callback:", response);
-        
-        // Handle successful payment
-        if (response.status === "successful") {
-          toast.success("Payment successful! Verifying order...");
-          window.location.href = `/verify-payment?status=${response.status}&tx_ref=${response.tx_ref}&transaction_id=${response.transaction_id}`;
-        } else if (response.status === "cancelled") {
-          toast.info("Payment cancelled");
-          setIsLoading(false);
-        } else {
-          toast.error("Payment failed. Please try again.");
+      // Check if payment config is loaded
+      if (!paymentConfig || !paymentConfig.publicKey) {
+        toast.error("Payment configuration not available. Please refresh the page.");
+        return;
+      }
+
+      const flutterwaveKey = paymentConfig.publicKey.trim();
+      
+      if (!flutterwaveKey.startsWith('FLWPUBK-')) {
+        console.error('Invalid public key format');
+        toast.error("Invalid payment configuration. Please contact support.");
+        return;
+      }
+
+      toast.info("Preparing your order...");
+      await syncCartToBackend();
+
+      const userData = JSON.parse(storedUser);
+      const orderId = `ORD_${Date.now()}_${userData.id}`;
+
+      const config = {
+        public_key: flutterwaveKey,
+        tx_ref: orderId,
+        amount: Number(total.toFixed(2)),
+        currency: paymentConfig.currency || "NGN",
+        country: "NG",
+        payment_options: "card,mobilemoney,ussd,account",
+        customer: {
+          email: userData.email,
+          phone_number: userData.phone || "",
+          name: `${userData.firstname || ""} ${userData.lastname || ""}`.trim()
+        },
+        customizations: {
+          title: "Grandeur Store",
+          description: `Payment for ${cartItems.length} item(s)`,
+          logo: ""
+        },
+        meta: {
+          consumer_id: userData.id,
+          order_id: orderId
+        },
+        callback: function(response) {
+          if (response.status === "successful") {
+            toast.success("Payment successful!");
+            window.location.href = `/verify-payment?status=successful&tx_ref=${response.tx_ref}&transaction_id=${response.transaction_id}`;
+          } else {
+            toast.error("Payment was not successful");
+            setIsLoading(false);
+          }
+        },
+        onclose: function() {
           setIsLoading(false);
         }
-      },
-      onclose: function() {
-        console.log("Payment modal closed");
-        toast.info("Payment window closed");
+      };
+
+      if (typeof window.FlutterwaveCheckout === 'function') {
+        window.FlutterwaveCheckout(config);
+      } else {
+        toast.error("Payment service not loaded. Please refresh and try again.");
         setIsLoading(false);
       }
-    };
 
-    // 8. Initialize Flutterwave payment
-    if (typeof window.FlutterwaveCheckout === 'function') {
-      window.FlutterwaveCheckout(paymentConfig);
-    } else {
-      throw new Error("Payment service not loaded");
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Failed to initialize payment");
+      setIsLoading(false);
     }
+  };
 
-  } catch (error) {
-    console.error("Payment initialization error:", error);
-    toast.error(error.message || "Failed to initialize payment. Please try again.");
-  } finally {
-    // Only reset loading if payment modal didn't open
-    setTimeout(() => setIsLoading(false), 1000);
-  }
-};
-
-// Improved cart sync with better error handling
-const syncCartToBackend = async () => {
-  const authToken = localStorage.getItem('token');
-  const storedUser = localStorage.getItem('user');
-
-  if (!authToken || !storedUser || !cartItems || cartItems.length === 0) {
-    console.error('Cannot sync cart: missing required data');
-    return false;
+  // Show loading states...
+  if (isCheckingAuth) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 size={48} className="mx-auto text-gray-400 mb-4 animate-spin" />
+            <p className="text-gray-600">Loading checkout...</p>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
-  try {
-    const userData = JSON.parse(storedUser);
-    const syncResults = [];
-
-    // Sync items sequentially to avoid rate limiting
-    for (const item of cartItems) {
-      try {
-        const response = await addToCartAPI(
-          userData.id,
-          item.id,
-          item.color || null,
-          item.size || null,
-          item.quantity || 1,
-          authToken
-        );
-
-        syncResults.push({
-          itemId: item.id,
-          success: response.ok,
-          error: response.ok ? null : response.data?.message
-        });
-
-        // Small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (error) {
-        console.error(`Failed to sync item ${item.id}:`, error);
-        syncResults.push({
-          itemId: item.id,
-          success: false,
-          error: error.message
-        });
-      }
-    }
-
-    const successCount = syncResults.filter(r => r.success).length;
-    console.log(`Cart sync: ${successCount}/${cartItems.length} items synced`);
-
-    // Log failed items
-    const failedItems = syncResults.filter(r => !r.success);
-    if (failedItems.length > 0) {
-      console.warn('Failed to sync items:', failedItems);
-    }
-
-    // Require at least 80% success rate
-    return successCount >= cartItems.length * 0.8;
-  } catch (error) {
-    console.error('Cart sync error:', error);
-    return false;
-  }
-};
-
-// Add validation before checkout
-const validateCheckout = () => {
-  const errors = [];
-
-  // Validate user data
-  if (!user?.email) errors.push("Email is required");
-  if (!user?.phone) errors.push("Phone number is required");
-  if (!user?.address) errors.push("Delivery address is required");
-
-  // Validate cart
   if (!cartItems || cartItems.length === 0) {
-    errors.push("Cart is empty");
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <Package size={64} className="mx-auto text-gray-400 mb-4" />
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Your Cart is Empty</h2>
+            <a href="/" className="inline-block bg-black text-white px-6 py-3 rounded-md">
+              Continue Shopping
+            </a>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
-  // Check for zero or negative prices
-  const invalidItems = cartItems.filter(item => !item.price || item.price <= 0);
-  if (invalidItems.length > 0) {
-    errors.push("Some items have invalid prices");
-  }
+  return (
+    <Layout>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+            <p className="text-gray-600 mt-2">Complete your order</p>
+          </div>
 
-  if (errors.length > 0) {
-    errors.forEach(error => toast.error(error));
-    return false;
-  }
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Customer Information */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Package size={24} />
+                  Customer Information
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Name</p>
+                    <p className="font-medium">{user?.firstname} {user?.lastname}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="font-medium">{user?.email}</p>
+                  </div>
+                </div>
+              </div>
 
-  return true;
+              {/* Order Items */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-4">Order Items ({cartItems.length})</h2>
+                <div className="space-y-4">
+                  {cartItems.map((item, index) => (
+                    <div key={`${item.id}-${index}`} className="flex gap-4 pb-4 border-b last:border-b-0">
+                      <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{item.name}</h3>
+                        <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                        <p className="text-lg font-bold text-green-700">${(item.price * item.quantity).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Order Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-sm p-6 sticky top-28">
+                <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+                <div className="space-y-3 mb-4 pb-4 border-b">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span className="font-medium">${subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Tax (10%)</span>
+                    <span className="font-medium">${tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Shipping</span>
+                    <span className="font-medium text-green-600">FREE</span>
+                  </div>
+                </div>
+                <div className="flex justify-between text-xl font-bold mb-6">
+                  <span>Total</span>
+                  <span className="text-green-700">${total.toFixed(2)}</span>
+                </div>
+                <button
+                  onClick={handleInitializePayment}
+                  disabled={isLoading || !paymentConfig}
+                  className="w-full bg-black text-white py-4 rounded-md hover:bg-gray-800 transition-all font-semibold flex items-center justify-center gap-2 mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={20} />
+                      Place Order
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => navigate('/cart')}
+                  className="w-full text-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  ← Back to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
 };
+
+export default Checkout;
