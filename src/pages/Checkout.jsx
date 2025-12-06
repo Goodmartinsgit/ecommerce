@@ -147,12 +147,12 @@ const Checkout = () => {
       }
 
       // Check if Flutterwave public key is configured
-      if (!flutterwavePublicKey || flutterwavePublicKey === 'undefined') {
-        console.error('Flutterwave public key not configured:', flutterwavePublicKey);
-        toast.error("Payment service not configured. Please add VITE_FLUTTERWAVE_PUBLIC_KEY to your .env file and restart the server.");
-        setIsLoading(false);
-        return;
-      }
+      // if (!flutterwavePublicKey || flutterwavePublicKey === 'undefined') {
+      //   console.error('Flutterwave public key not configured:', flutterwavePublicKey);
+      //   toast.error("Payment service not configured. Please add VITE_FLUTTERWAVE_PUBLIC_KEY to your .env file and restart the server.");
+      //   setIsLoading(false);
+      //   return;
+      // }
 
       console.log('Flutterwave key configured:', flutterwavePublicKey.substring(0, 20) + '...');
 
