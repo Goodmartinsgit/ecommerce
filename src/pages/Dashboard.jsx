@@ -27,7 +27,7 @@ import { toast } from "react-toastify";
 import { baseUrl } from "../config/config";
 
 export default function Dashboard() {
-  const { user, HandleLogout, isAuthenticated, HandleGetWishlist } = useContext(ProductContext);
+  const { user, HandleLogout, isAuthenticated, HandleGetWishlist, wishlistCount } = useContext(ProductContext);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState("overview");
@@ -200,6 +200,7 @@ export default function Dashboard() {
                     label="Wishlist"
                     active={activeSection === "wishlist"}
                     onClick={() => setActiveSection("wishlist")}
+                    badge={wishlistCount}
                   />
                   <NavButton
                     icon={<MapPin className="w-5 h-5" />}

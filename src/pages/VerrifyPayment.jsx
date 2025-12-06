@@ -216,7 +216,7 @@ export default function VerifyPayment() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowReceipt(true)}
-                className="px-6 py-3 rounded-xl border border-green-500 hover:bg-green-500 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center gap-2"
+                className="px-6 py-3 rounded-xl border border-black hover:bg-black hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center gap-2"
               >
                 <FaReceipt /> View Receipt
               </motion.button>
@@ -225,7 +225,7 @@ export default function VerifyPayment() {
                 href="/"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 rounded-xl bg-green-500 text-white hover:bg-white hover:text-green-500 border border-green-500 transition-all duration-300 shadow-sm"
+                className="px-6 py-3 rounded-xl bg-black text-white hover:bg-white hover:text-black border border-black transition-all duration-300 shadow-sm"
               >
                 Continue Shopping
               </motion.a>
@@ -259,7 +259,7 @@ export default function VerifyPayment() {
                   <FaReceipt className="w-8 h-8" />
                 </div>
               </div>
-              <h1 className="text-4xl font-extrabold mb-2 text-green-600">DESOBER</h1>
+              <h1 className="text-4xl font-bold font-serif italic mb-2 text-black">Granduer</h1>
               <p className="text-sm text-gray-500 mb-4">Fashion & Style Store</p>
               <h2 className="text-2xl font-bold mb-2">Payment Receipt</h2>
               <p className="text-gray-600">Transaction ID: {transaction_id}</p>
