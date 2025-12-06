@@ -8,6 +8,27 @@ import { toast } from "react-toastify";
 import { baseUrl } from "../config/config";
 import ProductContext from "../context/NewProductContext";
 
+// Print styles
+const printStyles = `
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    .print-area, .print-area * {
+      visibility: visible;
+    }
+    .print-area {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+    .no-print {
+      display: none !important;
+    }
+  }
+`;
+
 export default function VerifyPayment() {
   const [searchParams] = useSearchParams();
   const { setCartItems } = useContext(ProductContext);
@@ -154,7 +175,7 @@ export default function VerifyPayment() {
               transition={{ delay: 0.2, type: "spring", stiffness: 120 }}
               className="flex justify-center"
             >
-              <div className="bg-black text-white w-20 h-20 flex items-center justify-center rounded-full shadow-lg mb-6">
+              <div className="bg-green-500 text-white w-20 h-20 flex items-center justify-center rounded-full shadow-lg mb-6">
                 <FaCheckCircle className="w-10 h-10" />
               </div>
             </motion.div>
@@ -195,7 +216,7 @@ export default function VerifyPayment() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowReceipt(true)}
-                className="px-6 py-3 rounded-xl border border-black hover:bg-black hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center gap-2"
+                className="px-6 py-3 rounded-xl border border-green-500 hover:bg-green-500 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center gap-2"
               >
                 <FaReceipt /> View Receipt
               </motion.button>
@@ -204,7 +225,7 @@ export default function VerifyPayment() {
                 href="/"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 rounded-xl bg-black text-white hover:bg-white hover:text-black border border-black transition-all duration-300 shadow-sm"
+                className="px-6 py-3 rounded-xl bg-green-500 text-white hover:bg-white hover:text-green-500 border border-green-500 transition-all duration-300 shadow-sm"
               >
                 Continue Shopping
               </motion.a>
@@ -218,14 +239,15 @@ export default function VerifyPayment() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -100 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="bg-white p-8 rounded-3xl shadow-xl max-w-4xl w-full border border-gray-200"
+            className="bg-white p-8 rounded-3xl shadow-xl max-w-4xl w-full border border-gray-200 print-area"
           >
+            <style>{printStyles}</style>
             {/* Back Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowReceipt(false)}
-              className="mb-6 px-4 py-2 rounded-xl border border-gray-300 hover:bg-gray-100 transition-all duration-300 flex items-center gap-2"
+              className="mb-6 px-4 py-2 rounded-xl border border-gray-300 hover:bg-gray-100 transition-all duration-300 flex items-center gap-2 no-print"
             >
               <FaArrowLeft /> Back to Summary
             </motion.button>
@@ -233,12 +255,15 @@ export default function VerifyPayment() {
             {/* Receipt Header */}
             <div className="text-center mb-8">
               <div className="flex justify-center mb-4">
-                <div className="bg-black text-white w-16 h-16 flex items-center justify-center rounded-full">
+                <div className="bg-green-500 text-white w-16 h-16 flex items-center justify-center rounded-full">
                   <FaReceipt className="w-8 h-8" />
                 </div>
               </div>
-              <h1 className="text-3xl font-extrabold mb-2">Payment Receipt</h1>
+              <h1 className="text-4xl font-extrabold mb-2 text-green-600">DESOBER</h1>
+              <p className="text-sm text-gray-500 mb-4">Fashion & Style Store</p>
+              <h2 className="text-2xl font-bold mb-2">Payment Receipt</h2>
               <p className="text-gray-600">Transaction ID: {transaction_id}</p>
+              <p className="text-sm text-gray-500">Date: {new Date().toLocaleDateString()} | Time: {new Date().toLocaleTimeString()}</p>
             </div>
 
             {/* Transaction Details */}
@@ -246,19 +271,19 @@ export default function VerifyPayment() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Status</p>
-                  <p className="font-semibold">{status}</p>
+                  <p className="font-semibold text-green-600">{status}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Transaction Ref</p>
                   <p className="font-semibold">{txRef}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Date</p>
-                  <p className="font-semibold">{new Date().toLocaleDateString()}</p>
+                  <p className="text-sm text-gray-600">Customer</p>
+                  <p className="font-semibold">{receiptData?.name || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Time</p>
-                  <p className="font-semibold">{new Date().toLocaleTimeString()}</p>
+                  <p className="text-sm text-gray-600">Email</p>
+                  <p className="font-semibold">{receiptData?.email || 'N/A'}</p>
                 </div>
               </div>
             </div>
@@ -299,10 +324,10 @@ export default function VerifyPayment() {
 
             {/* Total */}
             {receiptData?.receiptItems && (
-              <div className="bg-gray-100 p-5 rounded-2xl mb-6">
+              <div className="bg-green-50 border border-green-200 p-5 rounded-2xl mb-6">
                 <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold">Total Amount:</span>
-                  <span className="text-2xl font-extrabold">
+                  <span className="text-xl font-bold text-green-700">Total Amount:</span>
+                  <span className="text-2xl font-extrabold text-green-600">
                     ₦{receiptData.receiptItems.reduce((sum, item) => sum + (item?.total || 0), 0).toLocaleString()}
                   </span>
                 </div>
@@ -310,12 +335,12 @@ export default function VerifyPayment() {
             )}
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 no-print">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => window.print()}
-                className="flex-1 px-6 py-3 rounded-xl border border-black hover:bg-black hover:text-white transition-all duration-300"
+                className="flex-1 px-6 py-3 rounded-xl border border-green-500 hover:bg-green-500 hover:text-white transition-all duration-300"
               >
                 Print Receipt
               </motion.button>
@@ -323,10 +348,16 @@ export default function VerifyPayment() {
                 href="/"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex-1 px-6 py-3 rounded-xl bg-black text-white hover:bg-white hover:text-black border border-black transition-all duration-300 text-center"
+                className="flex-1 px-6 py-3 rounded-xl bg-green-500 text-white hover:bg-white hover:text-green-500 border border-green-500 transition-all duration-300 text-center"
               >
                 Continue Shopping
               </motion.a>
+            </div>
+            
+            {/* Print Footer */}
+            <div className="hidden print:block mt-8 text-center text-sm text-gray-500">
+              <p>Thank you for shopping with DESOBER!</p>
+              <p>Visit us at www.desober.com | Email: support@desober.com</p>
             </div>
           </motion.div>
         )}

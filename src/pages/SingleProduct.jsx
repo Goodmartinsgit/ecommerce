@@ -1,12 +1,14 @@
 import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { CiHeart } from "react-icons/ci";
+import { FaHeart } from "react-icons/fa";
 import Layout from "../shared/Layout/Layout";
 import ProductContext from "../context/NewProductContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 const SingleProduct = () => {
   const { id } = useParams();
-  const { productData, isLoadingProducts, HandleGetProducts, HandleAddToCart, cartItems } =
+  const { productData, isLoadingProducts, HandleGetProducts, HandleAddToCart, cartItems, HandleToggleWishlist, IsInWishlist } =
     useContext(ProductContext);
 
   const [product, setProduct] = useState(null);
@@ -224,32 +226,57 @@ const SingleProduct = () => {
                 </div>
               )}
 
-              {/* Add to Cart / Add More Quantity Button */}
-              {!isInCart ? (
-                <button
-                  onClick={handleAddToCart}
-                  className="mt-4 w-full py-3 rounded-md transition-all font-medium bg-black hover:bg-gray-800 text-white"
-                >
-                  Pick this
-                </button>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  <button
-                    disabled
-                    className="w-full py-3 rounded-md font-medium bg-green-100 text-green-700 border-2 border-green-300 cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    <span className="text-lg">✓</span>
-                    You've picked this item
-                  </button>
-
+              {/* Action Buttons */}
+              <div className="mt-4 space-y-3">
+                {/* Add to Cart / Add More Quantity Button */}
+                {!isInCart ? (
                   <button
                     onClick={handleAddToCart}
-                    className="mt-4 w-full py-3 rounded-md transition-all font-medium bg-black hover:bg-gray-800 text-white"
+                    className="w-full py-3 rounded-md transition-all font-medium bg-black hover:bg-gray-800 text-white"
                   >
-                    Add More Quantity
+                    Pick this
                   </button>
-                </div>
-              )}
+                ) : (
+                  <div className="space-y-3">
+                    <button
+                      disabled
+                      className="w-full py-3 rounded-md font-medium bg-green-100 text-green-700 border-2 border-green-300 cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <span className="text-lg">✓</span>
+                      You've picked this item
+                    </button>
+
+                    <button
+                      onClick={handleAddToCart}
+                      className="w-full py-3 rounded-md transition-all font-medium bg-black hover:bg-gray-800 text-white"
+                    >
+                      Add More Quantity
+                    </button>
+                  </div>
+                )}
+
+                {/* Wishlist Button */}
+                <button
+                  onClick={() => HandleToggleWishlist(product)}
+                  className={`w-full py-3 rounded-md transition-all font-medium border-2 flex items-center justify-center gap-2 ${
+                    IsInWishlist(product.id)
+                      ? "bg-red-50 border-red-300 text-red-700 hover:bg-red-100"
+                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {IsInWishlist(product.id) ? (
+                    <>
+                      <FaHeart className="w-5 h-5" />
+                      Remove from Wishlist
+                    </>
+                  ) : (
+                    <>
+                      <CiHeart className="w-5 h-5" />
+                      Add to Wishlist
+                    </>
+                  )}
+                </button>
+              </div>
 
               {/* Rating and Best Seller */}
               <div className="flex items-center gap-4 mt-6">

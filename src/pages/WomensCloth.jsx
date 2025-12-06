@@ -18,9 +18,10 @@ const WomensCloth = () => {
     HandleUpdateCartItem,
     HandleRemoveFromCart,
     cartItems,
+    HandleToggleWishlist,
+    IsInWishlist,
   } = useContext(ProductContext);
   const [womensCloth, setWomensCloth] = useState([]);
-  const [favorites, setFavorites] = useState({});
 
   useEffect(() => {
     if (!productData || productData.length === 0) {
@@ -40,12 +41,7 @@ const WomensCloth = () => {
     }
   }, [productData]);
 
-  const toggleFavorite = (productId) => {
-    setFavorites((prev) => ({
-      ...prev,
-      [productId]: !prev[productId],
-    }));
-  };
+
   
 
   const getCartItemIndex = (productId, size, color) => {
@@ -177,10 +173,10 @@ const WomensCloth = () => {
                           </span>
 
                           <button
-                            onClick={() => toggleFavorite(product.id)}
+                            onClick={() => HandleToggleWishlist(product)}
                             className="rounded-full p-1 bg-white border border-primary flex justify-center items-center cursor-pointer transition"
                           >
-                            {favorites[product.id] ? (
+                            {IsInWishlist(product.id) ? (
                               <FaHeart className="h-6 w-6 text-red-500" />
                             ) : (
                               <CiHeart className="h-6 w-6" />

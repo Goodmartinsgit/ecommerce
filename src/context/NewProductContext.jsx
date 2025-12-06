@@ -166,6 +166,11 @@ export const ProductProvider = ({ children }) => {
 
   // Wishlist Functions
   const HandleToggleWishlist = async (product) => {
+    if (!product || !product.id) {
+      toast.error("Invalid product");
+      return;
+    }
+
     // Check if product is already in wishlist
     let storedWishlistItems = JSON.parse(localStorage.getItem("WishlistItems")) || [];
     const existingIndex = storedWishlistItems.findIndex(
@@ -173,55 +178,74 @@ export const ProductProvider = ({ children }) => {
     );
 
     let updatedWishlistItems;
-    if (existingIndex !== -1) {
+    const isRemoving = existingIndex !== -1;
+
+    if (isRemoving) {
       // Remove from wishlist
       updatedWishlistItems = storedWishlistItems.filter(
         (item) => parseInt(item.id) !== parseInt(product.id)
       );
-      toast.success("Removed from wishlist");
-
-      // If authenticated, sync with backend
-      if (isAuthenticated && user) {
-        try {
-          const token = localStorage.getItem("token");
-          await removeFromWishlistAPI(product.id, token);
-        } catch (error) {
-          console.error("Failed to sync wishlist removal with backend:", error);
-        }
-      }
     } else {
       // Add to wishlist
       updatedWishlistItems = [...storedWishlistItems, product];
-      toast.success("Added to wishlist");
-
-      // If authenticated, sync with backend
-      if (isAuthenticated && user) {
-        try {
-          const token = localStorage.getItem("token");
-          const response = await addToWishlistAPI(product.id, token);
-
-          if (!response.ok && response.data?.message === "Product already in wishlist") {
-            // Backend says it's already there, update local state
-            const backendWishlist = await HandleGetWishlist();
-            if (backendWishlist) {
-              return;
-            }
-          }
-        } catch (error) {
-          console.error("Failed to sync wishlist addition with backend:", error);
-        }
-      }
     }
 
-    // Save to localStorage and update state
+    // Update local state immediately for better UX
     localStorage.setItem("WishlistItems", JSON.stringify(updatedWishlistItems));
     setWishlistItems(updatedWishlistItems);
+
+    // If authenticated, sync with backend
+    if (isAuthenticated && user) {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          toast.error("Please login to sync wishlist");
+          return;
+        }
+
+        let response;
+        if (isRemoving) {
+          response = await removeFromWishlistAPI(product.id, token);
+          if (response.ok) {
+            toast.success("Removed from wishlist");
+          } else {
+            throw new Error(response.data?.message || "Failed to remove from wishlist");
+          }
+        } else {
+          response = await addToWishlistAPI(product.id, token);
+          if (response.ok) {
+            toast.success("Added to wishlist");
+          } else if (response.data?.message === "Product already in wishlist") {
+            // Backend says it's already there, sync with backend state
+            await HandleGetWishlist();
+            toast.info("Product was already in wishlist");
+          } else {
+            throw new Error(response.data?.message || "Failed to add to wishlist");
+          }
+        }
+      } catch (error) {
+        console.error("Failed to sync wishlist with backend:", error);
+        // Revert local state on backend failure
+        localStorage.setItem("WishlistItems", JSON.stringify(storedWishlistItems));
+        setWishlistItems(storedWishlistItems);
+        toast.error(error.message || "Failed to update wishlist");
+      }
+    } else {
+      // For guest users, just show success message
+      if (isRemoving) {
+        toast.success("Removed from wishlist");
+      } else {
+        toast.success("Added to wishlist");
+      }
+    }
   };
 
   const HandleGetWishlist = async () => {
     if (isAuthenticated && user) {
       try {
         const token = localStorage.getItem("token");
+        if (!token) return wishlistItems;
+        
         const response = await getWishlistAPI(token);
 
         if (response.ok && response.data) {
@@ -229,6 +253,8 @@ export const ProductProvider = ({ children }) => {
           setWishlistItems(wishlistProducts);
           localStorage.setItem("WishlistItems", JSON.stringify(wishlistProducts));
           return wishlistProducts;
+        } else {
+          console.error("Failed to fetch wishlist:", response);
         }
       } catch (error) {
         console.error("Failed to fetch wishlist:", error);
@@ -305,7 +331,7 @@ export const ProductProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const HandleLogin = (userData) => {
+  const HandleLogin = async (userData) => {
     setUser(userData);
     setIsAuthenticated(true);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -315,7 +341,9 @@ export const ProductProvider = ({ children }) => {
       setToken(storedToken);
     }
     // Fetch wishlist after login
-    HandleGetWishlist();
+    setTimeout(() => {
+      HandleGetWishlist();
+    }, 100);
   };
 
   const HandleLogout = () => {

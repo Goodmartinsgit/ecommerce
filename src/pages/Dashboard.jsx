@@ -27,7 +27,7 @@ import { toast } from "react-toastify";
 import { baseUrl } from "../config/config";
 
 export default function Dashboard() {
-  const { user, HandleLogout, isAuthenticated } = useContext(ProductContext);
+  const { user, HandleLogout, isAuthenticated, HandleGetWishlist } = useContext(ProductContext);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState("overview");
@@ -67,8 +67,9 @@ export default function Dashboard() {
       fetchOrders();
       fetchAddresses();
       fetchStats();
+      HandleGetWishlist();
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, HandleGetWishlist]);
 
   const fetchOrders = async () => {
     try {
@@ -443,13 +444,40 @@ function OrdersSection({ orders, onRefresh }) {
 
 // Wishlist, Addresses, Profile, Settings sections continue in next files...
 function WishlistSection() {
+  const { wishlistItems, HandleToggleWishlist, HandleAddToCart } = useContext(ProductContext);
+  const navigate = useNavigate();
+
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
-      <h2 className="text-2xl font-bold mb-6">My Wishlist</h2>
-      <div className="text-center py-12">
-        <Heart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-        <p className="text-gray-500">Your wishlist is empty</p>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">My Wishlist</h2>
+        <span className="text-sm text-gray-500">{wishlistItems.length} items</span>
       </div>
+      
+      {wishlistItems.length === 0 ? (
+        <div className="text-center py-12">
+          <Heart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+          <p className="text-gray-500 mb-4">Your wishlist is empty</p>
+          <button
+            onClick={() => navigate('/')}
+            className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800"
+          >
+            Start Shopping
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {wishlistItems.map((product) => (
+            <WishlistCard 
+              key={product.id} 
+              product={product} 
+              onRemove={() => HandleToggleWishlist(product)}
+              onAddToCart={() => HandleAddToCart(product, 1, product.defaultSize, product.defaultColor)}
+              onViewProduct={() => navigate(`/product/${product.id}`)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -476,6 +504,43 @@ function AddressesSection({ addresses, onRefresh }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function WishlistCard({ product, onRemove, onAddToCart, onViewProduct }) {
+  return (
+    <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+      <div className="relative">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-48 object-cover cursor-pointer"
+          onClick={onViewProduct}
+        />
+        <button
+          onClick={onRemove}
+          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
+        >
+          <Trash2 className="w-4 h-4 text-red-500" />
+        </button>
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-lg mb-2 cursor-pointer hover:text-gray-700" onClick={onViewProduct}>
+          {product.name}
+        </h3>
+        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+        <div className="flex items-center justify-between">
+          <span className="text-xl font-bold text-black">₦{product.price}</span>
+          <button
+            onClick={onAddToCart}
+            className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 flex items-center gap-2"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            Add to Cart
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
