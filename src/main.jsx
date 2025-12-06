@@ -12,6 +12,7 @@ import WomensCloth from "./pages/WomensCloth.jsx";
 import Children from "./pages/Children.jsx";
 import SingleProduct from "./pages/SingleProduct.jsx";
 import UserLoginPage from "./pages/Auth/UserLoginPage.jsx";
+import ResetPasswordPage from "./pages/Auth/ResetPasswordPage.jsx";
 import Cart from "./pages/Cart.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import BestSellersPage from "./pages/BestSellersPage.jsx";
@@ -71,6 +72,10 @@ const router = createBrowserRouter([
       {
         element: <UserLoginPage />,
         path: "/login",
+      },
+      {
+        element: <ResetPasswordPage />,
+        path: "/reset-password",
       },
       {
         element: <SingleProduct />,

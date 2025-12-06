@@ -6,6 +6,7 @@ import ProductContext from "../../context/NewProductContext";
 import { registerUser, loginUser } from "../../Services/UserServices";
 import { getCart } from "../../Services/CartServices";
 import { toast } from "react-toastify";
+import { baseUrl } from "../../config/config";
 
 const UserLoginPage = () => {
   const { HandleLogin, isAuthenticated, cartItems, setCartItems, user, setUser } = useContext(ProductContext);
@@ -272,12 +273,36 @@ const UserLoginPage = () => {
 
 
   
-  const handleResetPassword = (e) => {
+  const handleResetPassword = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-    toast.info(`A password reset link has been sent to ${inputs.email}`);
-    resetInputs();
-    setIsReset(false);
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch(`${baseUrl}auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: inputs.email }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast.success(data.message || `Password reset link has been sent to ${inputs.email}`);
+        resetInputs();
+        setIsReset(false);
+      } else {
+        toast.error(data.message || 'Failed to send reset link');
+      }
+    } catch (error) {
+      console.error('Reset password error:', error);
+      toast.error('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -671,9 +696,11 @@ const UserLoginPage = () => {
 
               <button
                 type="submit"
-                className="bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-all"
+                disabled={isLoading}
+                className="bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Send Reset Link
+                {isLoading && <Loader2 size={20} className="animate-spin" />}
+                {isLoading ? 'Sending...' : 'Send Reset Link'}
               </button>
 
               <button
