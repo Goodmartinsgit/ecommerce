@@ -259,6 +259,7 @@ export default function Dashboard() {
 
 // Navigation Button Component
 function NavButton({ icon, label, active, onClick, badge }) {
+  const isWishlist = label === "Wishlist";
   return (
     <button
       onClick={onClick}
@@ -274,7 +275,7 @@ function NavButton({ icon, label, active, onClick, badge }) {
       </div>
       {badge > 0 && (
         <span className={`px-2 py-0.5 text-xs rounded-full ${
-          active ? "bg-white text-black" : "bg-gray-200 text-black"
+          isWishlist ? "bg-red-500 text-white" : (active ? "bg-white text-black" : "bg-gray-200 text-black")
         }`}>
           {badge}
         </span>
@@ -285,6 +286,7 @@ function NavButton({ icon, label, active, onClick, badge }) {
 
 // Overview Section
 function OverviewSection({ stats, orders, user, onNavigate }) {
+  const { wishlistCount } = useContext(ProductContext);
   const recentOrders = orders.slice(0, 5);
 
   return (
@@ -330,6 +332,7 @@ function OverviewSection({ stats, orders, user, onNavigate }) {
             icon={<Heart className="w-6 h-6" />}
             label="View Wishlist"
             onClick={() => onNavigate("wishlist")}
+            badge={wishlistCount}
           />
           <QuickAction
             icon={<MapPin className="w-6 h-6" />}
@@ -387,12 +390,17 @@ function StatCard({ icon, label, value, bgColor }) {
 }
 
 // Quick Action Component
-function QuickAction({ icon, label, onClick }) {
+function QuickAction({ icon, label, onClick, badge }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-gray-200 hover:border-black hover:bg-gray-50 transition-all group"
+      className="relative flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-gray-200 hover:border-black hover:bg-gray-50 transition-all group"
     >
+      {badge > 0 && (
+        <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+          {badge}
+        </span>
+      )}
       <div className="text-gray-600 group-hover:text-black transition-colors">
         {icon}
       </div>
