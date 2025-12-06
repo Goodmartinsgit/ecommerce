@@ -276,8 +276,6 @@ export const ProductProvider = ({ children }) => {
   };
 
   const HandleGetProducts = useCallback(async () => {
-    if (isLoadingProducts) return;
-
     try {
       setIsLoadingProducts(true);
       const res = await fetch(`${baseUrl}products`, {
@@ -305,7 +303,7 @@ export const ProductProvider = ({ children }) => {
     } finally {
       setIsLoadingProducts(false);
     }
-  }, [isLoadingProducts]);
+  }, []);
 
   useEffect(() => {
     // Check if user is logged in with valid token
@@ -337,11 +335,9 @@ export const ProductProvider = ({ children }) => {
       }
     }
 
-    // Fetch products once on app load - only if not already loaded
-    if (!productData) {
-      HandleGetProducts();
-    }
-  }, []);
+    // Fetch products once on app load
+    HandleGetProducts();
+  }, [HandleGetProducts]);
 
   const HandleLogin = async (userData) => {
     setUser(userData);
