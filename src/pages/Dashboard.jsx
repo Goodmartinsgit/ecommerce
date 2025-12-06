@@ -75,7 +75,7 @@ export default function Dashboard() {
         setLoading(false);
       });
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user?.id]); // Only depend on user ID to prevent infinite loops
 
   const fetchOrders = async () => {
     try {
@@ -122,18 +122,37 @@ export default function Dashboard() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('No token available for stats fetch');
+        return;
+      }
+      
       const res = await fetch(`${baseUrl}orders/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+      
       if (res.status === 429) {
         console.warn('Rate limited - skipping stats fetch');
         return;
       }
+      
+      if (res.status === 401) {
+        console.warn('Unauthorized - invalid token');
+        return;
+      }
+      
+      if (res.status === 500) {
+        console.warn('Server error - skipping stats fetch');
+        return;
+      }
+      
       const data = await res.json();
       if (data.success) {
         setStats(data.data);
+      } else {
+        console.warn('Stats fetch failed:', data.message);
       }
     } catch (error) {
       console.error('Failed to fetch stats:', error);

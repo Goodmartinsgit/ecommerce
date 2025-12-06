@@ -61,12 +61,28 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       const token = getToken();
+      if (!token) {
+        console.warn('No token available for admin stats');
+        return;
+      }
+      
       const headers = { Authorization: `Bearer ${token}` };
 
       const [userStatsRes, orderStatsRes] = await Promise.all([
         fetch(`${baseUrl}users/admin/stats`, { headers }),
         fetch(`${baseUrl}orders/admin/stats`, { headers }),
       ]);
+
+      // Handle rate limiting and errors
+      if (userStatsRes.status === 429 || orderStatsRes.status === 429) {
+        console.warn('Rate limited - skipping admin stats fetch');
+        return;
+      }
+      
+      if (userStatsRes.status === 500 || orderStatsRes.status === 500) {
+        console.warn('Server error - skipping admin stats fetch');
+        return;
+      }
 
       const userStats = await userStatsRes.json();
       const orderStats = await orderStatsRes.json();
@@ -78,6 +94,8 @@ const AdminDashboard = () => {
           totalProducts: products ? products.length : 0,
           totalRevenue: orderStats.data.totalRevenue,
         });
+      } else {
+        console.warn('Admin stats fetch failed:', userStats.message || orderStats.message);
       }
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -201,7 +219,7 @@ const AdminDashboard = () => {
     if (products && products.length > 0) {
       fetchStats();
     }
-  }, [products]);
+  }, [products?.length]); // Only depend on products length to prevent infinite loops
 
   useEffect(() => {
     if (activeTab === "users") {
