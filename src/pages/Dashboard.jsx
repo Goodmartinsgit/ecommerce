@@ -461,17 +461,40 @@ function OrdersSection({ orders, onRefresh }) {
 
 // Wishlist, Addresses, Profile, Settings sections continue in next files...
 function WishlistSection() {
-  const { wishlistItems, HandleToggleWishlist, HandleAddToCart } = useContext(ProductContext);
+  const { wishlistItems, HandleToggleWishlist, HandleAddToCart, HandleGetWishlist } = useContext(ProductContext);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      setLoading(true);
+      await HandleGetWishlist();
+      setLoading(false);
+    };
+    fetchWishlist();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
+          <p className="text-gray-500 mt-4">Loading wishlist...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">My Wishlist</h2>
-        <span className="text-sm text-gray-500">{wishlistItems.length} items</span>
+        <span className="text-sm text-gray-500">{wishlistItems?.length || 0} items</span>
       </div>
       
-      {wishlistItems.length === 0 ? (
+      {!wishlistItems || wishlistItems.length === 0 ? (
         <div className="text-center py-12">
           <Heart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
           <p className="text-gray-500 mb-4">Your wishlist is empty</p>
