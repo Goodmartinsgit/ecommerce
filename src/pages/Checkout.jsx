@@ -147,11 +147,14 @@ const Checkout = () => {
       }
 
       // Check if Flutterwave public key is configured
-      if (!flutterwavePublicKey) {
-        toast.error("Payment service not configured. Please contact support.");
+      if (!flutterwavePublicKey || flutterwavePublicKey === 'undefined') {
+        console.error('Flutterwave public key not configured:', flutterwavePublicKey);
+        toast.error("Payment service not configured. Please add VITE_FLUTTERWAVE_PUBLIC_KEY to your .env file and restart the server.");
         setIsLoading(false);
         return;
       }
+
+      console.log('Flutterwave key configured:', flutterwavePublicKey.substring(0, 20) + '...');
 
       // Sync cart to backend before initializing payment
       toast.info("Preparing your order...");
@@ -175,8 +178,7 @@ const Checkout = () => {
         },
         customizations: {
           title: "Grandeur Store",
-          description: "Payment for your order",
-          logo: "https://your-logo-url.com/logo.png"
+          description: "Payment for your order"
         },
         meta: {
           userId: userData?.id,
