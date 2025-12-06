@@ -254,7 +254,10 @@ export const ProductProvider = ({ children }) => {
         }
 
         if (response.ok && response.data) {
-          const wishlistProducts = response.data.items?.map(item => item.product) || [];
+          // Backend returns { success: true, data: { items: [...] } }
+          const wishlistData = response.data.data || response.data;
+          const wishlistProducts = wishlistData.items?.map(item => item.product) || [];
+          console.log('Fetched wishlist:', wishlistProducts);
           setWishlistItems(wishlistProducts);
           localStorage.setItem("WishlistItems", JSON.stringify(wishlistProducts));
           return wishlistProducts;
@@ -312,8 +315,13 @@ export const ProductProvider = ({ children }) => {
     if (storedUser && token) {
       try {
         if (isValidToken()) {
-          setUser(JSON.parse(storedUser));
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
           setIsAuthenticated(true);
+          // Fetch wishlist for authenticated user
+          setTimeout(() => {
+            HandleGetWishlist();
+          }, 500);
         } else {
           localStorage.removeItem("user");
           localStorage.removeItem("token");
