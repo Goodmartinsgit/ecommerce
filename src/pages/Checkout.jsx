@@ -4,7 +4,7 @@ import Layout from "../shared/Layout/Layout";
 import { Package, CreditCard, Lock, Loader2 } from "lucide-react";
 import ProductContext from "../context/NewProductContext";
 import { toast } from "react-toastify";
-import { baseUrl } from "../config/config";
+import { baseUrl, flutterwavePublicKey } from "../config/config";
 import { addToCart as addToCartAPI } from "../Services/CartServices";
 
 const Checkout = () => {
@@ -146,35 +146,67 @@ const Checkout = () => {
         return;
       }
 
+      // Check if Flutterwave public key is configured
+      if (!flutterwavePublicKey) {
+        toast.error("Payment service not configured. Please contact support.");
+        setIsLoading(false);
+        return;
+      }
+
       // Sync cart to backend before initializing payment
       toast.info("Preparing your order...");
       await syncCartToBackend();
 
       const userData = storedUser ? JSON.parse(storedUser) : user;
+      const orderId = `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      const res = await fetch(`${baseUrl}payment/initialize`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
+      // Configure Flutterwave payment
+      const paymentConfig = {
+        public_key: flutterwavePublicKey,
+        tx_ref: orderId,
+        amount: total,
+        currency: "NGN",
+        payment_options: "card,mobilemoney,ussd",
+        redirect_url: `${window.location.origin}/verify-payment`,
+        customer: {
+          email: userData?.email,
+          phone_number: userData?.phone || "",
+          name: `${userData?.firstname || ""} ${userData?.lastname || ""}`
         },
-        body: JSON.stringify({ email: userData?.email }),
-      });
-      const data = await res.json();
+        customizations: {
+          title: "Grandeur Store",
+          description: "Payment for your order",
+          logo: "https://your-logo-url.com/logo.png"
+        },
+        meta: {
+          userId: userData?.id,
+          orderId: orderId,
+          cartItems: JSON.stringify(cartItems)
+        },
+        callback: function(data) {
+          console.log("Payment callback:", data);
+          if (data.status === "successful") {
+            // Redirect to verification page
+            window.location.href = `/verify-payment?status=${data.status}&tx_ref=${data.tx_ref}&transaction_id=${data.transaction_id}`;
+          } else {
+            toast.error("Payment was not successful");
+            setIsLoading(false);
+          }
+        },
+        onclose: function() {
+          console.log("Payment modal closed");
+          setIsLoading(false);
+        }
+      };
 
-      if (res.ok) {
-        console.log("Payment initialized:", data);
-        setIsLoading(false);
-        toast.success(data.message || "Redirecting to payment...");
-        // Redirect to payment gateway
-        setTimeout(() => {
-          window.location.href = data?.link;
-        }, 1000);
+      // Initialize Flutterwave payment
+      if (window.FlutterwaveCheckout) {
+        window.FlutterwaveCheckout(paymentConfig);
       } else {
-        console.error("Payment initialization failed:", data);
+        toast.error("Payment service not loaded. Please refresh and try again.");
         setIsLoading(false);
-        toast.error(data.message || "Failed to initialize payment");
       }
+
     } catch (error) {
       console.error("Payment initialization error:", error);
       setIsLoading(false);
