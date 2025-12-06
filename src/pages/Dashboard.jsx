@@ -308,7 +308,7 @@ function OverviewSection({ stats, orders, user, onNavigate }) {
         />
         <StatCard
           icon={<ShoppingBag className="w-6 h-6 text-black" />}
-          label="Completed"
+          label="Order Placed"
           value={stats.completedOrders}
           bgColor="bg-gray-100"
         />
@@ -415,14 +415,8 @@ function QuickAction({ icon, label, onClick, badge }) {
 // Order Card Component
 function OrderCard({ order, compact = false, onViewDetails, onWriteReview }) {
   const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
-      case 'DELIVERED': return 'bg-green-100 text-green-700';
-      case 'SHIPPED': return 'bg-blue-100 text-blue-700';
-      case 'PROCESSING': return 'bg-yellow-100 text-yellow-700';
-      case 'PENDING': return 'bg-orange-100 text-orange-700';
-      case 'CANCELLED': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
+    // All orders are pending until admin processes them
+    return 'bg-orange-100 text-orange-700';
   };
 
   const canReview = order.status?.toUpperCase() === 'DELIVERED' && !order.hasReview;
@@ -437,7 +431,7 @@ function OrderCard({ order, compact = false, onViewDetails, onWriteReview }) {
         <div className="text-right">
           <p className="font-bold">₦{order.amount?.toLocaleString()}</p>
           <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
-            {order.status}
+            PENDING
           </span>
         </div>
       </div>
@@ -821,11 +815,11 @@ function OrderDetailsModal({ order, onClose }) {
       { key: 'DELIVERED', label: 'Delivered', icon: <ShoppingBag className="w-4 h-4" /> }
     ];
     
-    const currentIndex = stages.findIndex(stage => stage.key === status?.toUpperCase());
+    // All orders are pending until admin processes them
     return stages.map((stage, index) => ({
       ...stage,
-      completed: index <= currentIndex,
-      active: index === currentIndex
+      completed: index === 0, // Only first stage (Order Placed) is completed
+      active: index === 0
     }));
   };
 
@@ -855,7 +849,7 @@ function OrderDetailsModal({ order, onClose }) {
             </div>
             <div>
               <p className="text-sm text-gray-600">Status</p>
-              <p className="font-semibold">{order.status}</p>
+              <p className="font-semibold">PENDING</p>
             </div>
           </div>
           
