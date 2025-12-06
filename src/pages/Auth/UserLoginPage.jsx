@@ -280,7 +280,7 @@ const UserLoginPage = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch(`${baseUrl}auth/forgot-password`, {
+      const response = await fetch(`${baseUrl}users/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

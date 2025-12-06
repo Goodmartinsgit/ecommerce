@@ -66,15 +66,14 @@ const ResetPasswordPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${baseUrl}auth/reset-password`, {
+      const response = await fetch(`${baseUrl}users/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           token,
-          password: inputs.password,
-          confirmPassword: inputs.confirmPassword,
+          newPassword: inputs.password,
         }),
       });
 
