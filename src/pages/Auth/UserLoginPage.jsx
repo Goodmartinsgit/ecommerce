@@ -355,7 +355,7 @@ const UserLoginPage = () => {
                 Sign in to your account
               </p>
 
-              <div className="flex flex-col gap-4">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div>
                   <label className="text-sm font-semibold text-gray-700 mb-2 block">
                     Email Address
@@ -434,14 +434,14 @@ const UserLoginPage = () => {
                 </div>
 
                 <button
-                  onClick={handleSubmit}
+                  type="submit"
                   disabled={isLoading}
                   className="bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-all mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading && <Loader2 size={20} className="animate-spin" />}
                   {isLoading ? 'Signing In...' : 'Sign In'}
                 </button>
-              </div>
+              </form>
             </div>
           )}
 
