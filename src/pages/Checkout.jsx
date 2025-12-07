@@ -459,22 +459,29 @@ const Checkout = () => {
   const [paymentConfig, setPaymentConfig] = useState(null);
 
   // Fetch payment configuration on mount
-  useEffect(() => {
-    const fetchPaymentConfig = async () => {
-      try {
-        const authToken = localStorage.getItem('token');
-        if (authToken) {
-          const config = await getPaymentConfig(authToken);
-          setPaymentConfig(config);
-        }
-      } catch (error) {
-        console.error('Failed to load payment configuration:', error);
-        toast.error('Failed to load payment settings');
+  // In your Checkout component, update the useEffect:
+useEffect(() => {
+  const fetchPaymentConfig = async () => {
+    try {
+      const authToken = localStorage.getItem('token');
+      console.log('Auth token exists:', !!authToken); // Debug
+      
+      if (authToken) {
+        const config = await getPaymentConfig(authToken);
+        console.log('Payment config received:', config); // Debug
+        console.log('Public key:', config.publicKey); // Debug
+        setPaymentConfig(config);
+      } else {
+        console.error('No auth token found');
       }
-    };
+    } catch (error) {
+      console.error('Failed to load payment configuration:', error);
+      toast.error('Failed to load payment settings');
+    }
+  };
 
-    fetchPaymentConfig();
-  }, []);
+  fetchPaymentConfig();
+}, []);
 
   // Check authentication
   useEffect(() => {
@@ -538,93 +545,173 @@ const Checkout = () => {
   };
 
   // Initialize payment with backend key
-  const handleInitializePayment = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+  // const handleInitializePayment = async (e) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
 
-    try {
-      const authToken = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
+  //   try {
+  //     const authToken = localStorage.getItem('token');
+  //     const storedUser = localStorage.getItem('user');
 
-      if (!authToken || !storedUser) {
-        toast.error("Please login to continue");
-        navigate("/login?returnUrl=/checkout");
-        return;
-      }
+  //     if (!authToken || !storedUser) {
+  //       toast.error("Please login to continue");
+  //       navigate("/login?returnUrl=/checkout");
+  //       return;
+  //     }
 
-      if (!cartItems || cartItems.length === 0) {
-        toast.error("Your cart is empty");
-        return;
-      }
+  //     if (!cartItems || cartItems.length === 0) {
+  //       toast.error("Your cart is empty");
+  //       return;
+  //     }
 
-      // Check if payment config is loaded
-      if (!paymentConfig || !paymentConfig.publicKey) {
-        toast.error("Payment configuration not available. Please refresh the page.");
-        return;
-      }
+  //     // Check if payment config is loaded
+  //     if (!paymentConfig || !paymentConfig.publicKey) {
+  //       toast.error("Payment configuration not available. Please refresh the page.");
+  //       return;
+  //     }
 
-      const flutterwaveKey = paymentConfig.publicKey.trim();
+  //     const flutterwaveKey = paymentConfig.publicKey.trim();
       
-      if (!flutterwaveKey.startsWith('FLWPUBK-')) {
-        console.error('Invalid public key format');
-        toast.error("Invalid payment configuration. Please contact support.");
-        return;
-      }
+  //     if (!flutterwaveKey.startsWith('FLWPUBK-')) {
+  //       console.error('Invalid public key format');
+  //       toast.error("Invalid payment configuration. Please contact support.");
+  //       return;
+  //     }
 
-      toast.info("Preparing your order...");
-      await syncCartToBackend();
+  //     toast.info("Preparing your order...");
+  //     await syncCartToBackend();
 
-      const userData = JSON.parse(storedUser);
-      const orderId = `ORD_${Date.now()}_${userData.id}`;
+  //     const userData = JSON.parse(storedUser);
+  //     const orderId = `ORD_${Date.now()}_${userData.id}`;
 
-      const config = {
-        public_key: flutterwaveKey,
-        tx_ref: orderId,
-        amount: Number(total.toFixed(2)),
-        currency: paymentConfig.currency || "NGN",
-        country: "NG",
-        payment_options: "card,mobilemoney,ussd,account",
-        customer: {
-          email: userData.email,
-          phone_number: userData.phone || "",
-          name: `${userData.firstname || ""} ${userData.lastname || ""}`.trim()
-        },
-        customizations: {
-          title: "Grandeur Store",
-          description: `Payment for ${cartItems.length} item(s)`,
-          logo: ""
-        },
-        meta: {
-          consumer_id: userData.id,
-          order_id: orderId
-        },
-        callback: function(response) {
-          if (response.status === "successful") {
-            toast.success("Payment successful!");
-            window.location.href = `/verify-payment?status=successful&tx_ref=${response.tx_ref}&transaction_id=${response.transaction_id}`;
-          } else {
-            toast.error("Payment was not successful");
-            setIsLoading(false);
-          }
-        },
-        onclose: function() {
-          setIsLoading(false);
-        }
-      };
+  //     const config = {
+  //       public_key: flutterwaveKey,
+  //       tx_ref: orderId,
+  //       amount: Number(total.toFixed(2)),
+  //       currency: paymentConfig.currency || "NGN",
+  //       country: "NG",
+  //       payment_options: "card,mobilemoney,ussd,account",
+  //       customer: {
+  //         email: userData.email,
+  //         phone_number: userData.phone || "",
+  //         name: `${userData.firstname || ""} ${userData.lastname || ""}`.trim()
+  //       },
+  //       customizations: {
+  //         title: "Grandeur Store",
+  //         description: `Payment for ${cartItems.length} item(s)`,
+  //         logo: ""
+  //       },
+  //       meta: {
+  //         consumer_id: userData.id,
+  //         order_id: orderId
+  //       },
+  //       callback: function(response) {
+  //         if (response.status === "successful") {
+  //           toast.success("Payment successful!");
+  //           window.location.href = `/verify-payment?status=successful&tx_ref=${response.tx_ref}&transaction_id=${response.transaction_id}`;
+  //         } else {
+  //           toast.error("Payment was not successful");
+  //           setIsLoading(false);
+  //         }
+  //       },
+  //       onclose: function() {
+  //         setIsLoading(false);
+  //       }
+  //     };
 
-      if (typeof window.FlutterwaveCheckout === 'function') {
-        window.FlutterwaveCheckout(config);
-      } else {
-        toast.error("Payment service not loaded. Please refresh and try again.");
-        setIsLoading(false);
-      }
+  //     if (typeof window.FlutterwaveCheckout === 'function') {
+  //       window.FlutterwaveCheckout(config);
+  //     } else {
+  //       toast.error("Payment service not loaded. Please refresh and try again.");
+  //       setIsLoading(false);
+  //     }
 
-    } catch (error) {
-      console.error("Payment error:", error);
-      toast.error("Failed to initialize payment");
+  //   } catch (error) {
+  //     console.error("Payment error:", error);
+  //     toast.error("Failed to initialize payment");
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  const handleInitializePayment = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+
+  try {
+    const authToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
+    if (!authToken || !storedUser) {
+      toast.error("Please login to continue");
+      navigate("/login?returnUrl=/checkout");
+      return;
+    }
+
+    if (!cartItems || cartItems.length === 0) {
+      toast.error("Your cart is empty");
+      return;
+    }
+
+    // DETAILED DEBUGGING
+    console.log('Payment config state:', paymentConfig);
+    console.log('Public key from config:', paymentConfig?.publicKey);
+
+    if (!paymentConfig) {
+      console.error('Payment config is null/undefined');
+      toast.error("Payment configuration not loaded. Please refresh the page.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!paymentConfig.publicKey) {
+      console.error('Public key is missing from config');
+      toast.error("Payment key not available. Please contact support.");
+      setIsLoading(false);
+      return;
+    }
+
+    const flutterwaveKey = paymentConfig.publicKey.trim();
+    
+    console.log('Flutterwave key to use:', flutterwaveKey);
+    console.log('Key starts with FLWPUBK-?', flutterwaveKey.startsWith('FLWPUBK-'));
+    
+    if (!flutterwaveKey.startsWith('FLWPUBK-')) {
+      console.error('Invalid public key format:', flutterwaveKey);
+      toast.error("Invalid payment configuration. Please contact support.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Rest of your payment code...
+    toast.info("Preparing your order...");
+    await syncCartToBackend();
+
+    const userData = JSON.parse(storedUser);
+    const orderId = `ORD_${Date.now()}_${userData.id}`;
+
+    const config = {
+      public_key: flutterwaveKey,
+      tx_ref: orderId,
+      amount: Number(total.toFixed(2)),
+      currency: paymentConfig.currency || "NGN",
+      // ... rest of config
+    };
+
+    console.log('Flutterwave config:', config);
+
+    if (typeof window.FlutterwaveCheckout === 'function') {
+      window.FlutterwaveCheckout(config);
+    } else {
+      toast.error("Payment service not loaded. Please refresh and try again.");
       setIsLoading(false);
     }
-  };
+
+  } catch (error) {
+    console.error("Payment error:", error);
+    toast.error("Failed to initialize payment");
+    setIsLoading(false);
+  }
+};
 
   // Show loading states...
   if (isCheckingAuth) {
