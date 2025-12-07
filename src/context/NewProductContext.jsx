@@ -12,12 +12,8 @@ export const ProductProvider = ({ children }) => {
   const [productData, setProductData] = useState(null);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-  const [cartItems, setCartItems] = useState(
-    JSON.parse(localStorage.getItem("CartItems")) || []
-  );
-  const [wishlistItems, setWishlistItems] = useState(
-    JSON.parse(localStorage.getItem("WishlistItems")) || []
-  );
+  const [cartItems, setCartItems] = useState([]);
+  const [wishlistItems, setWishlistItems] = useState([]);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -25,153 +21,196 @@ export const ProductProvider = ({ children }) => {
 
   useEffect(() => {
     if (cartItems && Array.isArray(cartItems)) {
-      const count = cartItems.reduce((acc, curr) => acc + curr?.quantity, 0);
+      const count = cartItems.reduce((acc, curr) => acc + (curr?.quantity || 0), 0);
       setCartCount(count);
     }
   }, [cartItems]);
+
   useEffect(() => {
     if (wishlistItems && Array.isArray(wishlistItems)) {
       setWishlistCount(wishlistItems.length);
     }
   }, [wishlistItems]);
 
-  const HandleAddToCart = async (prod, quantity = 1, size = null, color = null) => {
-    // Always update localStorage for guest cart
-    let storedCartItems = JSON.parse(localStorage.getItem("CartItems")) || [];
+  const HandleGetCart = async () => {
+    if (isAuthenticated && user) {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await getCartAPI(user.id, token);
 
-    // Find if product already exists in the cart with same size and color
-    const existingItem = storedCartItems.find(
-      (item) =>
-        parseInt(item.id) === parseInt(prod.id) &&
-        item.size === size &&
-        item.color === color
-    );
-
-    let updatedCartItems;
-    if (existingItem) {
-      // Update quantity for existing item with same size and color
-      updatedCartItems = storedCartItems.map((item) =>
-        parseInt(item.id) === parseInt(prod.id) &&
-        item.size === size &&
-        item.color === color
-          ? { ...item, quantity: item.quantity + quantity }
-          : item
-      );
-      toast.success("Cart quantity updated");
+        if (response.ok && response.data) {
+          const serverCart = response.data.data || response.data;
+          const items = serverCart.productCarts || [];
+          setCartItems(items);
+        }
+      } catch (error) {
+        console.error("Failed to fetch cart:", error);
+      }
     } else {
-      // Add a new product entry if it doesn't exist
-      updatedCartItems = [
-        ...storedCartItems,
-        { ...prod, quantity, size, color },
-      ];
-      toast.success("Item added to cart successfully");
+      const localCart = JSON.parse(localStorage.getItem("CartItems")) || [];
+      setCartItems(localCart);
     }
+  };
 
-    // Save updated cart in localStorage
-    localStorage.setItem("CartItems", JSON.stringify(updatedCartItems));
-    setCartItems(updatedCartItems);
+  const SyncGuestCartToServer = async () => {
+    const guestCart = JSON.parse(localStorage.getItem("CartItems")) || [];
+    if (guestCart.length === 0) return;
 
-    // If authenticated, also sync with backend
+    try {
+      const token = localStorage.getItem("token");
+      const serverCartResponse = await getCartAPI(user.id, token);
+      const serverItems = serverCartResponse?.data?.productCarts || [];
+      
+      for (const item of guestCart) {
+        const existsInServer = serverItems.some(
+          (serverItem) => 
+            serverItem.productId === item.id &&
+            serverItem.selectedSize === (item.size || item.selectedSize) &&
+            serverItem.selectedColor === (item.color || item.selectedColor)
+        );
+        
+        if (!existsInServer) {
+          await addToCartAPI(
+            user.id,
+            item.id,
+            item.size || item.selectedSize,
+            item.color || item.selectedColor,
+            item.quantity,
+            token
+          );
+        }
+      }
+      localStorage.removeItem("CartItems");
+      await HandleGetCart();
+    } catch (error) {
+      console.error("Failed to sync guest cart:", error);
+    }
+  };
+
+  const HandleAddToCart = async (prod, quantity = 1, size = null, color = null) => {
     if (isAuthenticated && user) {
       try {
         const token = localStorage.getItem("token");
         const response = await addToCartAPI(user.id, prod.id, size, color, quantity, token);
 
-        if (!response.ok) {
-          console.error('Failed to sync cart with backend:', response);
-          // Don't logout or show error - local cart is already updated
+        if (response.ok) {
+          await HandleGetCart();
+          toast.success(response.data?.message || "Item added to cart");
+        } else {
+          toast.error(response.data?.message || "Failed to add to cart");
         }
       } catch (error) {
-        console.error("Failed to sync cart with backend:", error);
-        // Don't show error to user, local cart is still updated
+        console.error("Add to cart error:", error);
+        toast.error("Failed to add to cart");
       }
+    } else {
+      let storedCartItems = JSON.parse(localStorage.getItem("CartItems")) || [];
+      const existingItem = storedCartItems.find(
+        (item) => parseInt(item.id) === parseInt(prod.id) && item.size === size && item.color === color
+      );
+
+      if (existingItem) {
+        storedCartItems = storedCartItems.map((item) =>
+          parseInt(item.id) === parseInt(prod.id) && item.size === size && item.color === color
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+        toast.success("Cart quantity updated");
+      } else {
+        storedCartItems.push({ ...prod, quantity, size, color });
+        toast.success("Item added to cart");
+      }
+
+      localStorage.setItem("CartItems", JSON.stringify(storedCartItems));
+      setCartItems(storedCartItems);
     }
   };
 
   const HandleUpdateCartItem = async (cartIndex, updates) => {
-    let storedCartItems = JSON.parse(localStorage.getItem("CartItems")) || [];
-
-    // Validate cart index
-    if (cartIndex < 0 || cartIndex >= storedCartItems.length) {
-      toast.error("Invalid cart item");
-      return;
-    }
-
-    // const oldItem = storedCartItems[cartIndex];
-
-    // Update the specific item
-    storedCartItems[cartIndex] = {
-      ...storedCartItems[cartIndex],
-      ...updates,
-    };
-
-    // Save to localStorage and update state
-    localStorage.setItem("CartItems", JSON.stringify(storedCartItems));
-    setCartItems(storedCartItems);
-    toast.success("Cart updated successfully");
-
-    // If authenticated, also sync with backend
     if (isAuthenticated && user) {
+      const item = cartItems[cartIndex];
+      if (!item) {
+        toast.error("Invalid cart item");
+        return;
+      }
+
       try {
         const token = localStorage.getItem("token");
-        const updatedItem = storedCartItems[cartIndex];
-        const response = await updateCartAPI(user.id, updatedItem.id, updatedItem.size, updatedItem.color, updatedItem.quantity, token);
+        const response = await updateCartAPI(
+          user.id,
+          item.product?.id || item.productId,
+          updates.size || item.selectedSize || item.size,
+          updates.color || item.selectedColor || item.color,
+          updates.quantity || item.quantity,
+          token
+        );
 
-        if (!response.ok) {
-          console.error('Failed to sync cart update with backend:', response);
-          // Don't logout or show error - local cart is already updated
+        if (response.ok) {
+          await HandleGetCart();
+          toast.success("Cart updated successfully");
+        } else {
+          toast.error("Failed to update cart");
         }
       } catch (error) {
-        console.error("Failed to sync cart update with backend:", error);
-        // Don't show error to user, local cart is still updated
+        console.error("Update cart error:", error);
+        toast.error("Failed to update cart");
       }
+    } else {
+      let storedCartItems = JSON.parse(localStorage.getItem("CartItems")) || [];
+      if (cartIndex < 0 || cartIndex >= storedCartItems.length) {
+        toast.error("Invalid cart item");
+        return;
+      }
+
+      storedCartItems[cartIndex] = { ...storedCartItems[cartIndex], ...updates };
+      localStorage.setItem("CartItems", JSON.stringify(storedCartItems));
+      setCartItems(storedCartItems);
+      toast.success("Cart updated successfully");
     }
   };
 
   const HandleRemoveFromCart = async (cartIndex) => {
-    let storedCartItems = JSON.parse(localStorage.getItem("CartItems")) || [];
-
-    // Validate cart index
-    if (cartIndex < 0 || cartIndex >= storedCartItems.length) {
-      toast.error("Invalid cart item");
-      return;
-    }
-
-    const itemToRemove = storedCartItems[cartIndex];
-
-    // Remove item at the specified index
-    storedCartItems.splice(cartIndex, 1);
-
-    // Save to localStorage and update state
-    localStorage.setItem("CartItems", JSON.stringify(storedCartItems));
-    setCartItems(storedCartItems);
-    toast.success("Item removed from cart");
-
-    // If authenticated, also sync with backend
     if (isAuthenticated && user) {
+      const item = cartItems[cartIndex];
+      if (!item) {
+        toast.error("Invalid cart item");
+        return;
+      }
+
       try {
         const token = localStorage.getItem("token");
-        const response = await deleteFromCartAPI(user.id, itemToRemove.id, token);
+        const response = await deleteFromCartAPI(user.id, item.product?.id || item.productId, token);
 
-        if (!response.ok) {
-          console.error('Failed to sync cart removal with backend:', response);
-          // Don't logout or show error - local cart is already updated
+        if (response.ok) {
+          await HandleGetCart();
+          toast.success("Item removed from cart");
+        } else {
+          toast.error("Failed to remove item");
         }
       } catch (error) {
-        console.error("Failed to sync cart removal with backend:", error);
-        // Don't show error to user, local cart is still updated
+        console.error("Remove from cart error:", error);
+        toast.error("Failed to remove item");
       }
+    } else {
+      let storedCartItems = JSON.parse(localStorage.getItem("CartItems")) || [];
+      if (cartIndex < 0 || cartIndex >= storedCartItems.length) {
+        toast.error("Invalid cart item");
+        return;
+      }
+
+      storedCartItems.splice(cartIndex, 1);
+      localStorage.setItem("CartItems", JSON.stringify(storedCartItems));
+      setCartItems(storedCartItems);
+      toast.success("Item removed from cart");
     }
   };
 
-  // Wishlist Functions
   const HandleToggleWishlist = async (product) => {
     if (!product || !product.id) {
       toast.error("Invalid product");
       return;
     }
 
-    // Check if product is already in wishlist
     let storedWishlistItems = JSON.parse(localStorage.getItem("WishlistItems")) || [];
     const existingIndex = storedWishlistItems.findIndex(
       (item) => parseInt(item.id) === parseInt(product.id)
@@ -181,20 +220,16 @@ export const ProductProvider = ({ children }) => {
     const isRemoving = existingIndex !== -1;
 
     if (isRemoving) {
-      // Remove from wishlist
       updatedWishlistItems = storedWishlistItems.filter(
         (item) => parseInt(item.id) !== parseInt(product.id)
       );
     } else {
-      // Add to wishlist
       updatedWishlistItems = [...storedWishlistItems, product];
     }
 
-    // Update local state immediately for better UX
     localStorage.setItem("WishlistItems", JSON.stringify(updatedWishlistItems));
     setWishlistItems(updatedWishlistItems);
 
-    // If authenticated, sync with backend
     if (isAuthenticated && user) {
       try {
         const token = localStorage.getItem("token");
@@ -216,7 +251,6 @@ export const ProductProvider = ({ children }) => {
           if (response.ok) {
             toast.success("Added to wishlist");
           } else if (response.data?.message === "Product already in wishlist") {
-            // Backend says it's already there, sync with backend state
             await HandleGetWishlist();
             toast.info("Product was already in wishlist");
           } else {
@@ -225,13 +259,11 @@ export const ProductProvider = ({ children }) => {
         }
       } catch (error) {
         console.error("Failed to sync wishlist with backend:", error);
-        // Revert local state on backend failure
         localStorage.setItem("WishlistItems", JSON.stringify(storedWishlistItems));
         setWishlistItems(storedWishlistItems);
         toast.error(error.message || "Failed to update wishlist");
       }
     } else {
-      // For guest users, just show success message
       if (isRemoving) {
         toast.success("Removed from wishlist");
       } else {
@@ -254,15 +286,11 @@ export const ProductProvider = ({ children }) => {
         }
 
         if (response.ok && response.data) {
-          // Backend returns { success: true, data: { items: [...] } }
           const wishlistData = response.data.data || response.data;
           const wishlistProducts = wishlistData.items?.map(item => item.product) || [];
-          console.log('Fetched wishlist:', wishlistProducts);
           setWishlistItems(wishlistProducts);
           localStorage.setItem("WishlistItems", JSON.stringify(wishlistProducts));
           return wishlistProducts;
-        } else {
-          console.error("Failed to fetch wishlist:", response);
         }
       } catch (error) {
         console.error("Failed to fetch wishlist:", error);
@@ -306,7 +334,6 @@ export const ProductProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // Check if user is logged in with valid token
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
 
@@ -316,8 +343,8 @@ export const ProductProvider = ({ children }) => {
           const userData = JSON.parse(storedUser);
           setUser(userData);
           setIsAuthenticated(true);
-          // Fetch wishlist for authenticated user
           setTimeout(() => {
+            HandleGetCart();
             HandleGetWishlist();
           }, 500);
         } else {
@@ -325,6 +352,8 @@ export const ProductProvider = ({ children }) => {
           localStorage.removeItem("token");
           setUser(null);
           setIsAuthenticated(false);
+          const localCart = JSON.parse(localStorage.getItem("CartItems")) || [];
+          setCartItems(localCart);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -332,10 +361,14 @@ export const ProductProvider = ({ children }) => {
         localStorage.removeItem("token");
         setUser(null);
         setIsAuthenticated(false);
+        const localCart = JSON.parse(localStorage.getItem("CartItems")) || [];
+        setCartItems(localCart);
       }
+    } else {
+      const localCart = JSON.parse(localStorage.getItem("CartItems")) || [];
+      setCartItems(localCart);
     }
 
-    // Fetch products once on app load
     HandleGetProducts();
   }, [HandleGetProducts]);
 
@@ -343,77 +376,25 @@ export const ProductProvider = ({ children }) => {
     setUser(userData);
     setIsAuthenticated(true);
     localStorage.setItem("user", JSON.stringify(userData));
-    // Sync token state with localStorage
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
       setToken(storedToken);
     }
-    // Fetch wishlist after login
-    setTimeout(() => {
-      HandleGetWishlist();
-    }, 100);
+    await SyncGuestCartToServer();
+    await HandleGetCart();
+    await HandleGetWishlist();
   };
 
   const HandleLogout = () => {
     setUser(null);
     setToken(null);
     setIsAuthenticated(false);
+    setCartItems([]);
+    setWishlistItems([]);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     localStorage.removeItem("CartItems");
     localStorage.removeItem("WishlistItems");
-    setWishlistItems([]);
-  };
-  const HandleUpdateCart = async (prod) => {
-    try {
-      const storedCartItems = JSON.parse(localStorage.getItem("CartItems")) || [];
-
-      //checking if product exist
-      const existingProduct = storedCartItems.find(
-        (item) => parseInt(item?.id) === parseInt(prod?.id)
-      );
-
-      if (!existingProduct) {
-        toast.error("Product does not exist in cart!");
-        return;
-      }
-
-      const updatedCartItems = storedCartItems.map((item) =>
-        parseInt(item?.id) === parseInt(prod?.id)
-          ? {
-              ...item,
-              size: prod?.size ?? item?.size,
-              quantity: prod?.quantity ?? item?.quantity,
-              color: prod?.color ?? item?.color,
-            }
-          : item
-      );
-
-      localStorage.setItem("CartItems", JSON.stringify(updatedCartItems));
-      setCartItems(updatedCartItems);
-      toast.success("Cart updated successfully");
-
-      // If authenticated, also sync with backend
-      if (isAuthenticated && user) {
-        try {
-          const token = localStorage.getItem("token");
-          const updatedProduct = updatedCartItems.find(
-            (item) => parseInt(item?.id) === parseInt(prod?.id)
-          );
-          const response = await updateCartAPI(user.id, updatedProduct.id, updatedProduct.size, updatedProduct.color, updatedProduct.quantity, token);
-
-          if (!response.ok) {
-            console.error('Failed to sync cart update with backend:', response);
-            // Don't logout or show error - local cart is already updated
-          }
-        } catch (error) {
-          console.error("Failed to sync cart update with backend:", error);
-          // Don't show error to user, local cart is still updated
-        }
-      }
-    } catch (error) {
-      toast.error(`Failed to update cart: ${error?.message}`);
-    }
   };
 
   return (
@@ -425,6 +406,7 @@ export const ProductProvider = ({ children }) => {
         HandleAddToCart,
         HandleUpdateCartItem,
         HandleRemoveFromCart,
+        HandleGetCart,
         cartItems,
         setCartItems,
         cartCount,
@@ -441,7 +423,7 @@ export const ProductProvider = ({ children }) => {
         HandleLogin,
         HandleLogout,
         setIsAuthenticated,
-        HandleUpdateCart
+        SyncGuestCartToServer
       }}
     >
       {children}
@@ -450,6 +432,3 @@ export const ProductProvider = ({ children }) => {
 };
 
 export default ProductContext;
-
-
-
