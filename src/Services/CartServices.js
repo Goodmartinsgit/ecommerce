@@ -8,7 +8,7 @@ export const addToCart = async (userId, productId, color, size, quantity, token)
     return { ok: false, error: 'Authentication required', status: 401 };
   }
   
-  return await safeFetch(`${baseUrl}cart`, {
+  return await safeFetch(`${baseUrl}/cart`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ export const getCart = async (userId, token) => {
     return { ok: false, error: 'User ID required', status: 400 };
   }
   
-  return await safeFetch(`${baseUrl}cart/${userId}`, {
+  return await safeFetch(`${baseUrl}/cart/${userId}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`
@@ -47,7 +47,7 @@ export const getCart = async (userId, token) => {
 // Update cart item
 export const updateCart = async (userId, productId, size, color, quantity, token) => {
   try {
-    const res = await fetch(`${baseUrl}cart`, {
+    const res = await fetch(`${baseUrl}/cart`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ export const updateCart = async (userId, productId, size, color, quantity, token
 // Delete item from cart
 export const deleteFromCart = async (userId, productId, token) => {
   try {
-    const res = await fetch(`${baseUrl}cart/${userId}`, {
+    const res = await fetch(`${baseUrl}/cart/${userId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

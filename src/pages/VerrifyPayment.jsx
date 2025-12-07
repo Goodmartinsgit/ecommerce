@@ -60,7 +60,7 @@ export default function VerifyPayment() {
         return;
       }
 
-      const res = await fetch(`${baseUrl}payment/verify?transaction_id=${transaction_id}&status=${status}&tx_ref=${txRef}`, {
+      const res = await fetch(`${baseUrl}/payment/verify?transaction_id=${transaction_id}&status=${status}&tx_ref=${txRef}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
