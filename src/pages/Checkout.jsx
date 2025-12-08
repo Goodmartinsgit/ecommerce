@@ -147,6 +147,7 @@ const Checkout = () => {
         currency: paymentConfig.currency || "NGN",
         country: "NG",
         payment_options: "card,mobilemoney,ussd,account",
+        redirect_url: `${window.location.origin}/verify-payment`,
         customer: {
           email: userData.email,
           phone_number: userData.phone || "",
@@ -163,25 +164,60 @@ const Checkout = () => {
           // Removed cartItems from meta to avoid hitting payload limits
         },
         callback: function(response) {
-          if (response.status === "successful") {
-            toast.success("Payment successful!");
-            window.location.href = `/verify-payment?status=successful&tx_ref=${response.tx_ref}&transaction_id=${response.transaction_id}`;
+          console.log("Flutterwave callback received:", response);
+
+          if (response.status === "successful" || response.status === "completed") {
+            toast.success("Payment successful! Redirecting...");
+
+            // Use setTimeout to ensure toast is visible before redirect
+            setTimeout(() => {
+              // Use navigate for React Router navigation
+              const txRef = response.tx_ref || response.txRef || orderId;
+              const transactionId = response.transaction_id || response.transactionId || response.flw_ref;
+
+              navigate(`/verify-payment?status=successful&tx_ref=${txRef}&transaction_id=${transactionId}`);
+            }, 1000);
           } else {
-            toast.error("Payment was not successful");
+            console.error("Payment failed:", response);
+            toast.error(response.message || "Payment was not successful");
             setIsLoading(false);
           }
         },
         onclose: function() {
+          console.log("Flutterwave modal closed");
           setIsLoading(false);
         }
       };
 
-      if (typeof window.FlutterwaveCheckout === 'function') {
-        window.FlutterwaveCheckout(config);
-      } else {
-        toast.error("Payment service not loaded. Please refresh and try again.");
-        setIsLoading(false);
+      // Check if Flutterwave script is loaded
+      if (typeof window.FlutterwaveCheckout !== 'function') {
+        console.error("FlutterwaveCheckout not found. Waiting for script to load...");
+
+        // Wait up to 5 seconds for the script to load
+        let attempts = 0;
+        const checkInterval = setInterval(() => {
+          attempts++;
+
+          if (typeof window.FlutterwaveCheckout === 'function') {
+            clearInterval(checkInterval);
+            console.log("Flutterwave script loaded successfully");
+            window.FlutterwaveCheckout(config);
+          } else if (attempts >= 10) {
+            clearInterval(checkInterval);
+            console.error("Flutterwave script failed to load after 5 seconds");
+            toast.error("Payment service not loaded. Please refresh the page and try again.");
+            setIsLoading(false);
+          }
+        }, 500);
+        return;
       }
+
+      console.log("Initializing Flutterwave checkout with config:", {
+        ...config,
+        public_key: config.public_key.substring(0, 20) + '...' // Log partial key for security
+      });
+
+      window.FlutterwaveCheckout(config);
 
     } catch (error) {
       console.error("Payment error:", error);
