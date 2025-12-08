@@ -948,8 +948,8 @@ function OrderDetailsModal({ order, onClose }) {
   const statusInfo = getStatusInfo(order.status);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Order Details</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -1001,10 +1001,31 @@ function OrderDetailsModal({ order, onClose }) {
             </div>
           </div>
           
-          {order.trackingNumber && (
-            <div>
-              <p className="text-sm text-gray-600">Tracking Number</p>
-              <p className="font-mono bg-gray-100 p-2 rounded">{order.trackingNumber}</p>
+          {(order.trackingNumber || (order.trackingHistory && order.trackingHistory.length > 0)) && (
+            <div className="bg-gray-50 p-4 rounded-lg">
+               <h3 className="font-semibold mb-2">Tracking Information</h3>
+               {order.trackingNumber && (
+                   <div className="mb-3">
+                      <p className="text-xs text-gray-500">Tracking Number</p>
+                      <p className="font-mono font-medium">{order.trackingNumber}</p>
+                   </div>
+               )}
+               
+               {order.trackingHistory && order.trackingHistory.length > 0 && (
+                 <div className="space-y-3 mt-3 border-t pt-3">
+                    {order.trackingHistory.map((history, idx) => (
+                        <div key={idx} className="flex gap-3 text-sm">
+                            <div className="min-w-[80px] text-gray-500 text-xs">
+                                {new Date(history.createdAt).toLocaleDateString()}
+                            </div>
+                            <div>
+                                <p className="font-medium text-gray-900">{history.status}</p>
+                                <p className="text-gray-600">{history.description} {history.location && ` - ${history.location}`}</p>
+                            </div>
+                        </div>
+                    ))}
+                 </div>
+               )}
             </div>
           )}
         </div>

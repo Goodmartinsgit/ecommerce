@@ -162,15 +162,7 @@ const UserLoginPage = () => {
           formData.append("image", inputs.Image);
         }
 
-        // Debug: Log what we're sending
-        console.log("Registration Data:");
-        for (let [key, value] of formData.entries()) {
-          console.log(`${key}:`, value);
-        }
-
         const res = await registerUser(formData);
-
-        console.log("Registration Response:", res);
 
         if (res.ok) {
           toast.success(res?.data?.message || "Registration successful! Please check your email for verification.");

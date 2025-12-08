@@ -71,7 +71,6 @@ export default function VerifyPayment() {
       const data = await res.json();
 
       if (res.ok) {
-        console.log("Payment verification successful:", data);
         setIsVerified(true);
         setReceiptData(data?.data);
 
@@ -81,7 +80,6 @@ export default function VerifyPayment() {
         toast.success("Payment verified successfully!");
       } else {
         toast.error(data?.message || "Payment verification failed");
-        console.error("Verification failed:", data);
       }
     } catch (error) {
       console.error("Payment verification error:", error);
