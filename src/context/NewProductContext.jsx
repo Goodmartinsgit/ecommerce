@@ -41,7 +41,17 @@ export const ProductProvider = ({ children }) => {
         if (response.ok && response.data) {
           const serverCart = response.data.data || response.data;
           const items = serverCart.productCarts || [];
-          setCartItems(items);
+
+          // Transform backend cart structure to frontend structure
+          const transformedItems = items.map(item => ({
+            ...item.product,
+            color: item.selectedColor,
+            size: item.selectedSize,
+            quantity: item.quantity,
+            cartItemId: item.id
+          }));
+
+          setCartItems(transformedItems);
         }
       } catch (error) {
         console.error("Failed to fetch cart:", error);
@@ -412,10 +422,33 @@ export const ProductProvider = ({ children }) => {
           const userData = JSON.parse(storedUser);
           setUser(userData);
           setIsAuthenticated(true);
-          setTimeout(() => {
-            HandleGetCart();
-            HandleGetWishlist();
-          }, 500);
+
+          // Load from localStorage immediately to prevent white icons
+          const localWishlist = JSON.parse(localStorage.getItem("WishlistItems")) || [];
+          const localCart = JSON.parse(localStorage.getItem("CartItems")) || [];
+
+          // Transform cart items if they have nested product structure
+          const transformedCart = localCart.map(item => {
+            if (item.product && item.productId) {
+              // Has nested structure - transform it
+              return {
+                ...item.product,
+                color: item.selectedColor,
+                size: item.selectedSize,
+                quantity: item.quantity,
+                cartItemId: item.id
+              };
+            }
+            // Already flat structure (guest cart) - return as is
+            return item;
+          });
+
+          setWishlistItems(localWishlist);
+          setCartItems(transformedCart);
+
+          // Then fetch fresh data from server (without delay)
+          HandleGetCart();
+          HandleGetWishlist();
         } else {
           localStorage.removeItem("user");
           localStorage.removeItem("token");
