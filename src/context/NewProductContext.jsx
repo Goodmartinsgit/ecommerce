@@ -122,22 +122,64 @@ export const ProductProvider = ({ children }) => {
   };
 
   const HandleAddToCart = async (prod, quantity = 1, size = null, color = null) => {
+    // Store previous cart state for rollback on error
+    const previousCartItems = [...cartItems];
+    
     if (isAuthenticated && user) {
+      // OPTIMISTIC UPDATE: Update UI immediately
+      const existingItemIndex = cartItems.findIndex(
+        (item) => {
+          const itemProductId = item.product?.id || item.productId;
+          const itemSize = item.selectedSize || item.size;
+          const itemColor = item.selectedColor || item.color;
+          return parseInt(itemProductId) === parseInt(prod.id) && itemSize === size && itemColor === color;
+        }
+      );
+
+      let optimisticCartItems;
+      if (existingItemIndex !== -1) {
+        // Update quantity for existing item
+        optimisticCartItems = cartItems.map((item, index) => 
+          index === existingItemIndex 
+            ? { ...item, quantity: (item.quantity || 1) + quantity }
+            : item
+        );
+        toast.success("Cart quantity updated");
+      } else {
+        // Add new item with product structure matching server response
+        const newItem = {
+          productId: prod.id,
+          product: prod,
+          quantity: quantity,
+          selectedSize: size,
+          selectedColor: color
+        };
+        optimisticCartItems = [...cartItems, newItem];
+        toast.success("Item added to cart");
+      }
+      
+      // Update UI immediately
+      setCartItems(optimisticCartItems);
+
+      // Make API call in background
       try {
         const token = localStorage.getItem("token");
         const response = await addToCartAPI(user.id, prod.id, size, color, quantity, token);
 
-        if (response.ok) {
-          await HandleGetCart();
-          toast.success(response.data?.message || "Item added to cart");
-        } else {
-          toast.error(response.data?.message || "Failed to add to cart");
+        if (!response.ok) {
+          // Rollback on error
+          setCartItems(previousCartItems);
+          toast.error(response.error || "Failed to add to cart");
         }
+        // Don't fetch cart again - we already have optimistic update
       } catch (error) {
         console.error("Add to cart error:", error);
+        // Rollback on error
+        setCartItems(previousCartItems);
         toast.error("Failed to add to cart");
       }
     } else {
+      // Guest user - same logic as before (already fast since it's localStorage)
       let storedCartItems = JSON.parse(localStorage.getItem("CartItems")) || [];
       const existingItem = storedCartItems.find(
         (item) => parseInt(item.id) === parseInt(prod.id) && item.size === size && item.color === color

@@ -4,8 +4,8 @@ import axiosInstance from '../utils/axiosInstance';
 export const addToCart = async (userId, productId, color, size, quantity) => {
   try {
     const response = await axiosInstance.post('cart', {
-      userId: userId,
-      productId: productId,
+      userid: userId,
+      productid: productId,
       color: color || null,
       size: size || null,
       quantity: quantity || 1
@@ -47,8 +47,8 @@ export const getCart = async (userId) => {
 export const updateCart = async (userId, productId, size, color, quantity) => {
   try {
     const response = await axiosInstance.patch('cart', {
-      userId: userId,
-      productId: productId,
+      userid: userId,
+      productid: productId,
       size: size,
       color: color,
       quantity: quantity
