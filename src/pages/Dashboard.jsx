@@ -464,11 +464,25 @@ function QuickAction({ icon, label, onClick, badge }) {
 
 // Order Card Component
 function OrderCard({ order, compact = false, onViewDetails, onWriteReview }) {
-  const getStatusColor = (status) => {
-    // All orders are pending until admin processes them
-    return 'bg-orange-100 text-orange-700';
+  const getStatusInfo = (status) => {
+    const statusUpper = status?.toUpperCase() || 'PENDING';
+    switch (statusUpper) {
+      case 'PENDING':
+        return { color: 'bg-orange-100 text-orange-700', label: 'Pending' };
+      case 'PROCESSING':
+        return { color: 'bg-blue-100 text-blue-700', label: 'Processing' };
+      case 'SHIPPED':
+        return { color: 'bg-purple-100 text-purple-700', label: 'Shipped' };
+      case 'DELIVERED':
+        return { color: 'bg-green-100 text-green-700', label: 'Delivered' };
+      case 'CANCELLED':
+        return { color: 'bg-red-100 text-red-700', label: 'Cancelled' };
+      default:
+        return { color: 'bg-gray-100 text-gray-700', label: status || 'Unknown' };
+    }
   };
 
+  const statusInfo = getStatusInfo(order.status);
   const canReview = order.status?.toUpperCase() === 'DELIVERED' && !order.hasReview;
 
   return (
@@ -480,8 +494,8 @@ function OrderCard({ order, compact = false, onViewDetails, onWriteReview }) {
         </div>
         <div className="text-right">
           <p className="font-bold">₦{order.amount?.toLocaleString()}</p>
-          <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
-            PENDING
+          <span className={`text-xs px-2 py-1 rounded-full ${statusInfo.color}`}>
+            {statusInfo.label}
           </span>
         </div>
       </div>
@@ -489,15 +503,16 @@ function OrderCard({ order, compact = false, onViewDetails, onWriteReview }) {
         <div className="flex gap-2 mt-3">
           <button
             onClick={() => onViewDetails(order)}
-            className="flex-1 text-sm border border-gray-300 px-3 py-1 rounded hover:bg-gray-50"
+            className="flex-1 text-sm border border-gray-300 px-3 py-2 rounded-lg hover:bg-gray-50 font-medium"
           >
             View Details
           </button>
           {canReview && (
             <button
               onClick={() => onWriteReview(order)}
-              className="flex-1 text-sm bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
+              className="flex-1 text-sm bg-black text-white px-3 py-2 rounded-lg hover:bg-gray-800 font-medium flex items-center justify-center gap-1"
             >
+              <Star className="w-4 h-4" />
               Write Review
             </button>
           )}
@@ -907,13 +922,30 @@ function OrderDetailsModal({ order, onClose }) {
       { key: 'DELIVERED', label: 'Delivered', icon: <ShoppingBag className="w-4 h-4" /> }
     ];
     
-    // All orders are pending until admin processes them
+    // Find the current status index
+    const statusUpper = status?.toUpperCase() || 'PENDING';
+    const currentIndex = stages.findIndex(s => s.key === statusUpper);
+    
     return stages.map((stage, index) => ({
       ...stage,
-      completed: index === 0, // Only first stage (Order Placed) is completed
-      active: index === 0
+      completed: index <= currentIndex,
+      active: index === currentIndex
     }));
   };
+
+  const getStatusInfo = (status) => {
+    const statusUpper = status?.toUpperCase() || 'PENDING';
+    switch (statusUpper) {
+      case 'PENDING': return { color: 'text-orange-600', label: 'Pending' };
+      case 'PROCESSING': return { color: 'text-blue-600', label: 'Processing' };
+      case 'SHIPPED': return { color: 'text-purple-600', label: 'Shipped' };
+      case 'DELIVERED': return { color: 'text-green-600', label: 'Delivered' };
+      case 'CANCELLED': return { color: 'text-red-600', label: 'Cancelled' };
+      default: return { color: 'text-gray-600', label: status || 'Unknown' };
+    }
+  };
+
+  const statusInfo = getStatusInfo(order.status);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -941,7 +973,7 @@ function OrderDetailsModal({ order, onClose }) {
             </div>
             <div>
               <p className="text-sm text-gray-600">Status</p>
-              <p className="font-semibold">PENDING</p>
+              <p className={`font-semibold ${statusInfo.color}`}>{statusInfo.label}</p>
             </div>
           </div>
           
@@ -983,10 +1015,14 @@ function OrderDetailsModal({ order, onClose }) {
 
 // Review Modal
 function ReviewModal({ order, onClose, onSubmit }) {
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Get order items (products in this order)
+  const orderItems = order.items || order.orderItems || [];
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -1003,11 +1039,18 @@ function ReviewModal({ order, onClose, onSubmit }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!selectedProduct) {
+      toast.error('Please select a product to review');
+      return;
+    }
+    
     setLoading(true);
     
     try {
       const formData = new FormData();
       formData.append('orderId', order.id);
+      formData.append('productId', selectedProduct.productId || selectedProduct.id);
       formData.append('rating', rating);
       formData.append('comment', comment);
       images.forEach(image => formData.append('images', image));
@@ -1037,7 +1080,7 @@ function ReviewModal({ order, onClose, onSubmit }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-lg w-full mx-4">
+      <div className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Write Review</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -1046,6 +1089,46 @@ function ReviewModal({ order, onClose, onSubmit }) {
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Product Selection */}
+          {orderItems.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Select Product to Review</label>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {orderItems.map((item, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setSelectedProduct(item)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                      selectedProduct === item 
+                        ? 'border-black bg-gray-50' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    {item.product?.image && (
+                      <img 
+                        src={item.product.image} 
+                        alt={item.product?.name} 
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                    )}
+                    <div className="text-left flex-1">
+                      <p className="font-medium text-sm">{item.product?.name || item.name || 'Product'}</p>
+                      <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                    </div>
+                    {selectedProduct === item && (
+                      <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          
           <div>
             <label className="block text-sm font-medium mb-2">Rating</label>
             <div className="flex gap-1">
@@ -1054,7 +1137,7 @@ function ReviewModal({ order, onClose, onSubmit }) {
                   key={star}
                   type="button"
                   onClick={() => setRating(star)}
-                  className={`text-2xl ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                  className={`text-2xl transition-transform hover:scale-110 ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
                 >
                   ★
                 </button>
@@ -1067,8 +1150,8 @@ function ReviewModal({ order, onClose, onSubmit }) {
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg h-24"
-              placeholder="Share your experience..."
+              className="w-full px-3 py-2 border rounded-lg h-24 resize-none"
+              placeholder="Share your experience with this product..."
               required
             />
           </div>
@@ -1080,7 +1163,7 @@ function ReviewModal({ order, onClose, onSubmit }) {
               multiple
               accept="image/*"
               onChange={handleImageUpload}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg text-sm"
             />
             {images.length > 0 && (
               <div className="flex gap-2 mt-2 flex-wrap">
@@ -1104,18 +1187,18 @@ function ReviewModal({ order, onClose, onSubmit }) {
             )}
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50"
+              className="flex-1 border border-gray-300 py-2.5 rounded-lg hover:bg-gray-50 font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="flex-1 bg-black text-white py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+              disabled={loading || !selectedProduct}
+              className="flex-1 bg-black text-white py-2.5 rounded-lg hover:bg-gray-800 disabled:opacity-50 font-medium"
             >
               {loading ? 'Submitting...' : 'Submit Review'}
             </button>
