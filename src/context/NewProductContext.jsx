@@ -87,6 +87,40 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
+  // Sync guest wishlist to server on login
+  const SyncGuestWishlistToServer = async () => {
+    const guestWishlist = JSON.parse(localStorage.getItem("WishlistItems")) || [];
+    if (guestWishlist.length === 0) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      // Get current server wishlist to avoid duplicates
+      const serverWishlistResponse = await getWishlistAPI(token);
+      const serverItems = serverWishlistResponse?.data?.data?.items || 
+                          serverWishlistResponse?.data?.items || [];
+      const serverProductIds = serverItems.map(item => item.product?.id || item.productId);
+
+      // Add guest wishlist items that don't exist on server
+      for (const item of guestWishlist) {
+        const productId = item.id || item.productId;
+        if (!serverProductIds.includes(productId)) {
+          try {
+            await addToWishlistAPI(productId, token);
+          } catch (err) {
+            console.warn(`Failed to sync wishlist item ${productId}:`, err);
+          }
+        }
+      }
+
+      // Clear guest wishlist after sync
+      localStorage.removeItem("WishlistItems");
+    } catch (error) {
+      console.error("Failed to sync guest wishlist:", error);
+    }
+  };
+
   const HandleAddToCart = async (prod, quantity = 1, size = null, color = null) => {
     if (isAuthenticated && user) {
       try {
@@ -352,8 +386,11 @@ export const ProductProvider = ({ children }) => {
           localStorage.removeItem("token");
           setUser(null);
           setIsAuthenticated(false);
+          // Load guest cart and wishlist from localStorage
           const localCart = JSON.parse(localStorage.getItem("CartItems")) || [];
+          const localWishlist = JSON.parse(localStorage.getItem("WishlistItems")) || [];
           setCartItems(localCart);
+          setWishlistItems(localWishlist);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -361,12 +398,18 @@ export const ProductProvider = ({ children }) => {
         localStorage.removeItem("token");
         setUser(null);
         setIsAuthenticated(false);
+        // Load guest cart and wishlist from localStorage
         const localCart = JSON.parse(localStorage.getItem("CartItems")) || [];
+        const localWishlist = JSON.parse(localStorage.getItem("WishlistItems")) || [];
         setCartItems(localCart);
+        setWishlistItems(localWishlist);
       }
     } else {
+      // No stored user - load guest cart and wishlist from localStorage
       const localCart = JSON.parse(localStorage.getItem("CartItems")) || [];
+      const localWishlist = JSON.parse(localStorage.getItem("WishlistItems")) || [];
       setCartItems(localCart);
+      setWishlistItems(localWishlist);
     }
 
     HandleGetProducts();
@@ -380,7 +423,10 @@ export const ProductProvider = ({ children }) => {
     if (storedToken) {
       setToken(storedToken);
     }
+    // Sync guest cart and wishlist to server
     await SyncGuestCartToServer();
+    await SyncGuestWishlistToServer();
+    // Fetch updated data from server
     await HandleGetCart();
     await HandleGetWishlist();
   };
