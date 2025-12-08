@@ -275,7 +275,6 @@ export default function Dashboard() {
                 <OverviewSection
                   stats={stats}
                   orders={orders}
-                  user={user}
                   onNavigate={setActiveSection}
                 />
               )}
@@ -292,8 +291,6 @@ export default function Dashboard() {
                   onRefresh={fetchAddresses}
                 />
               )}
-              {activeSection === "profile" && <ProfileSection user={user} />}
-              {activeSection === "settings" && <SettingsSection user={user} />}
             </main>
           </div>
         </div>

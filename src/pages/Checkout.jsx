@@ -76,10 +76,9 @@ const Checkout = () => {
           const response = await addToCartAPI(
             userData.id,
             item.id,
-            item.color || null,
             item.size || null,
-            item.quantity || 1,
-            authToken
+            item.color || null,
+            item.quantity || 1
           );
           return response.ok;
         } catch {
