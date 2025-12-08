@@ -77,6 +77,7 @@ export default function Dashboard() {
         setLoading(false);
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, user?.id]); // Only depend on user ID to prevent infinite loops
 
   const fetchOrders = async () => {

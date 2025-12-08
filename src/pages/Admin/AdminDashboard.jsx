@@ -25,7 +25,7 @@ import { toast } from "react-toastify";
 
 const AdminDashboard = () => {
   const { productData, HandleGetProducts } = useContext(ProductContext);
-  const products = productData || [];
+  const products = useMemo(() => productData || [], [productData]);
 
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showProductModal, setShowProductModal] = useState(false);
@@ -45,22 +45,22 @@ const AdminDashboard = () => {
     totalProducts: 0,
     totalRevenue: 0,
   });
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
 
-  const [productPage, setProductPage] = useState(1);
+  const [productPage, _setProductPage] = useState(1);
   const [userPage] = useState(1);
   const [orderPage] = useState(1);
   const itemsPerPage = 10;
 
-  const [productSearch, setProductSearch] = useState("");
-  const [productSort, setProductSort] = useState("name");
-  const [productFilter, setProductFilter] = useState("all");
+  const [productSearch, _setProductSearch] = useState("");
+  const [productSort, _setProductSort] = useState("name");
+  const [productFilter, _setProductFilter] = useState("all");
 
-  const [userSearch, setUserSearch] = useState("");
-  const [userFilter, setUserFilter] = useState("all");
+  const [userSearch, _setUserSearch] = useState("");
+  const [userFilter, _setUserFilter] = useState("all");
 
   const [orderSearch, setOrderSearch] = useState("");
-  const [orderFilter, setOrderFilter] = useState("all");
+  const [orderFilter, _setOrderFilter] = useState("all");
 
   const fetchStats = async () => {
     try {
@@ -297,7 +297,7 @@ const AdminDashboard = () => {
     return filteredProducts.slice(start, start + itemsPerPage);
   }, [filteredProducts, productPage]);
 
-  const totalProductPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const _totalProductPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const recentProducts = products ? products.slice(0, 5) : [];
 
   const navItems = [

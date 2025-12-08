@@ -287,6 +287,8 @@ export const ProductProvider = ({ children }) => {
       return;
     }
 
+    // Store previous state for rollback
+    const previousWishlistItems = [...wishlistItems];
     let storedWishlistItems = JSON.parse(localStorage.getItem("WishlistItems")) || [];
     const existingIndex = storedWishlistItems.findIndex(
       (item) => parseInt(item.id) === parseInt(product.id)
@@ -303,47 +305,38 @@ export const ProductProvider = ({ children }) => {
       updatedWishlistItems = [...storedWishlistItems, product];
     }
 
+    // OPTIMISTIC UPDATE: Update UI and show toast immediately
     localStorage.setItem("WishlistItems", JSON.stringify(updatedWishlistItems));
     setWishlistItems(updatedWishlistItems);
+    toast.success(isRemoving ? "Removed from wishlist" : "Added to wishlist");
 
+    // Make API call in background for authenticated users
     if (isAuthenticated && user) {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
-          toast.error("Please login to sync wishlist");
           return;
         }
 
         let response;
         if (isRemoving) {
           response = await removeFromWishlistAPI(product.id, token);
-          if (response.ok) {
-            toast.success("Removed from wishlist");
-          } else {
-            throw new Error(response.data?.message || "Failed to remove from wishlist");
-          }
         } else {
           response = await addToWishlistAPI(product.id, token);
-          if (response.ok) {
-            toast.success("Added to wishlist");
-          } else if (response.data?.message === "Product already in wishlist") {
-            await HandleGetWishlist();
-            toast.info("Product was already in wishlist");
-          } else {
-            throw new Error(response.data?.message || "Failed to add to wishlist");
-          }
+        }
+
+        if (!response.ok) {
+          // Rollback on error
+          localStorage.setItem("WishlistItems", JSON.stringify(previousWishlistItems));
+          setWishlistItems(previousWishlistItems);
+          toast.error(response.data?.message || "Failed to update wishlist");
         }
       } catch (error) {
         console.error("Failed to sync wishlist with backend:", error);
-        localStorage.setItem("WishlistItems", JSON.stringify(storedWishlistItems));
-        setWishlistItems(storedWishlistItems);
-        toast.error(error.message || "Failed to update wishlist");
-      }
-    } else {
-      if (isRemoving) {
-        toast.success("Removed from wishlist");
-      } else {
-        toast.success("Added to wishlist");
+        // Rollback on error
+        localStorage.setItem("WishlistItems", JSON.stringify(previousWishlistItems));
+        setWishlistItems(previousWishlistItems);
+        toast.error("Failed to update wishlist");
       }
     }
   };
@@ -455,7 +448,8 @@ export const ProductProvider = ({ children }) => {
     }
 
     HandleGetProducts();
-  }, [HandleGetProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const HandleLogin = async (userData) => {
     setUser(userData);

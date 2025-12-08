@@ -26,7 +26,7 @@ const Checkout = () => {
         } else {
           // No auth token, will be handled by auth check
         }
-      } catch (error) {
+      } catch {
         console.error('Failed to load payment configuration');
         toast.error('Failed to load payment settings');
       }
@@ -82,14 +82,14 @@ const Checkout = () => {
             authToken
           );
           return response.ok;
-        } catch (error) {
+        } catch {
           return false;
         }
       });
 
       const results = await Promise.all(syncPromises);
       return results.filter(r => r).length > 0;
-    } catch (error) {
+    } catch {
       return false;
     }
   };
