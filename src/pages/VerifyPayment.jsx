@@ -325,9 +325,9 @@ export default function VerifyPayment() {
             {/* Total */}
             {receiptData?.receiptItems && (
               <div className="bg-green-50 border border-green-200 p-5 rounded-2xl mb-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold text-green-700">Total Amount:</span>
-                  <span className="text-2xl font-extrabold text-green-600">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+                  <span className="text-lg sm:text-xl font-bold text-green-700">Total Amount:</span>
+                  <span className="text-xl sm:text-2xl font-extrabold text-green-600 break-all text-center sm:text-right">
                     ₦{receiptData.receiptItems.reduce((sum, item) => sum + (item?.total || 0), 0).toLocaleString()}
                   </span>
                 </div>

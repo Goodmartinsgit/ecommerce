@@ -336,30 +336,37 @@ function OverviewSection({ stats, orders, user, onNavigate }) {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
-          icon={<Package className="w-6 h-6 text-black" />}
+          icon={<Package className="w-6 h-6 text-blue-600" />}
           label="Total Orders"
           value={stats.totalOrders}
-          bgColor="bg-gray-100"
+          bgColor="bg-blue-50"
         />
         <StatCard
-          icon={<Clock className="w-6 h-6 text-black" />}
+          icon={<Clock className="w-6 h-6 text-orange-600" />}
           label="Pending"
           value={stats.pendingOrders}
-          bgColor="bg-gray-100"
+          bgColor="bg-orange-50"
         />
         <StatCard
-          icon={<ShoppingBag className="w-6 h-6 text-black" />}
-          label="Order Placed"
+          icon={<ShoppingBag className="w-6 h-6 text-green-600" />}
+          label="Completed"
           value={stats.completedOrders}
-          bgColor="bg-gray-100"
+          bgColor="bg-green-50"
         />
         <StatCard
-          icon={<TrendingUp className="w-6 h-6 text-black" />}
+          icon={<Heart className="w-6 h-6 text-red-500" />}
+          label="Wishlist"
+          value={wishlistCount}
+          bgColor="bg-red-50"
+        />
+        <StatCard
+          icon={<TrendingUp className="w-6 h-6 text-purple-600" />}
           label="Total Spent"
           value={`₦${stats.totalSpent?.toLocaleString() || 0}`}
-          bgColor="bg-gray-100"
+          bgColor="bg-purple-50"
+          isWide={true}
         />
       </div>
 
@@ -575,8 +582,6 @@ function WishlistSection() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-
   useEffect(() => {
     const fetchWishlist = async () => {
       setLoading(true);
@@ -584,14 +589,15 @@ function WishlistSection() {
       setLoading(false);
     };
     fetchWishlist();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
-          <p className="text-gray-500 mt-4">Loading wishlist...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-black mx-auto"></div>
+          <p className="text-gray-500 mt-4">Loading your wishlist...</p>
         </div>
       </div>
     );
@@ -599,20 +605,39 @@ function WishlistSection() {
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">My Wishlist</h2>
-        <span className="text-sm text-gray-500">{wishlistItems?.length || 0} items</span>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h2 className="text-2xl font-bold">My Wishlist</h2>
+          <p className="text-gray-500 mt-1">
+            {wishlistItems?.length || 0} {wishlistItems?.length === 1 ? 'item' : 'items'} saved
+          </p>
+        </div>
+        {wishlistItems?.length > 0 && (
+          <button
+            onClick={() => navigate('/')}
+            className="text-black hover:text-gray-700 font-medium flex items-center gap-1"
+          >
+            Continue Shopping
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
       </div>
       
       {!wishlistItems || wishlistItems.length === 0 ? (
-        <div className="text-center py-12">
-          <Heart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-          <p className="text-gray-500 mb-4">Your wishlist is empty</p>
+        <div className="text-center py-16">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-10 h-10 text-gray-300" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Your wishlist is empty</h3>
+          <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+            Save items you love by clicking the heart icon on any product
+          </p>
           <button
             onClick={() => navigate('/')}
-            className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800"
+            className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium"
           >
-            Start Shopping
+            Discover Products
           </button>
         </div>
       ) : (
@@ -659,37 +684,61 @@ function AddressesSection({ addresses, onRefresh }) {
 }
 
 function WishlistCard({ product, onRemove, onAddToCart, onViewProduct }) {
+  const hasDiscount = product.discount && product.discount > 0;
+  const originalPrice = product.price;
+  const discountedPrice = hasDiscount 
+    ? (originalPrice * (1 - product.discount / 100)).toFixed(0) 
+    : originalPrice;
+
   return (
-    <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+    <div className="border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 bg-white group">
       <div className="relative">
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-48 object-cover cursor-pointer"
+          className="w-full h-52 object-cover cursor-pointer group-hover:scale-105 transition-transform duration-300"
           onClick={onViewProduct}
         />
+        {hasDiscount && (
+          <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+            -{product.discount}%
+          </span>
+        )}
         <button
           onClick={onRemove}
-          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
+          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 hover:scale-110 transition-all"
+          title="Remove from wishlist"
         >
           <Trash2 className="w-4 h-4 text-red-500" />
         </button>
       </div>
       <div className="p-4">
-        <h3 className="font-semibold text-lg mb-2 cursor-pointer hover:text-gray-700" onClick={onViewProduct}>
+        <h3 
+          className="font-semibold text-lg mb-1 cursor-pointer hover:text-gray-700 line-clamp-1" 
+          onClick={onViewProduct}
+        >
           {product.name}
         </h3>
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+        <p className="text-gray-500 text-sm mb-3 line-clamp-2">{product.description}</p>
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-black">₦{product.price}</span>
-          <button
-            onClick={onAddToCart}
-            className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 flex items-center gap-2"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            Add to Cart
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold text-green-600">
+              ₦{Number(discountedPrice).toLocaleString()}
+            </span>
+            {hasDiscount && (
+              <span className="text-sm text-gray-400 line-through">
+                ₦{Number(originalPrice).toLocaleString()}
+              </span>
+            )}
+          </div>
         </div>
+        <button
+          onClick={onAddToCart}
+          className="mt-3 w-full bg-black text-white py-2.5 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 font-medium"
+        >
+          <ShoppingBag className="w-4 h-4" />
+          Add to Cart
+        </button>
       </div>
     </div>
   );
