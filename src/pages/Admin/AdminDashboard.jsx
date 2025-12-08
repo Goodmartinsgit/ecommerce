@@ -42,8 +42,8 @@ const AdminDashboard = () => {
 
   // Pagination states
   const [productPage, setProductPage] = useState(1);
-  const [userPage, setUserPage] = useState(1);
-  const [orderPage, setOrderPage] = useState(1);
+  const [userPage] = useState(1);
+  const [orderPage] = useState(1);
   const itemsPerPage = 10;
 
   // Filter and sort states
@@ -234,12 +234,14 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     HandleGetProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (products && products.length >= 0) { // Allow 0 products
       fetchStats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products?.length]); // Only depend on products length to prevent infinite loops
 
   useEffect(() => {

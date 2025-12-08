@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCheckCircle, FaReceipt, FaArrowLeft } from "react-icons/fa";
 import Confetti from "react-confetti";

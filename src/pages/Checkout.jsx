@@ -415,16 +415,15 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../shared/Layout/Layout";
-import { Package, CreditCard, Lock, Loader2 } from "lucide-react";
+import { Package, Lock, Loader2 } from "lucide-react";
 import ProductContext from "../context/NewProductContext";
 import { toast } from "react-toastify";
-import { baseUrl } from "../config/config";
 import { addToCart as addToCartAPI } from "../Services/CartServices";
 import { getPaymentConfig } from "../Services/PaymentServices";
 
 
 const Checkout = () => {
-  const { cartItems, isAuthenticated, user, token } = useContext(ProductContext);
+  const { cartItems, user } = useContext(ProductContext);
   const navigate = useNavigate();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isLoading, setIsLoading] = useState(false);

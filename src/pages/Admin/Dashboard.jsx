@@ -26,8 +26,6 @@ const AdminDashboard = () => {
 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Admin data states
   const [users, setUsers] = useState([]);
@@ -41,8 +39,8 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
 
   // Pagination states
-  const [userPage, setUserPage] = useState(1);
-  const [orderPage, setOrderPage] = useState(1);
+  const [userPage] = useState(1);
+  const [orderPage] = useState(1);
 
   // Fetch admin statistics
   const fetchStats = async () => {
@@ -180,12 +178,14 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     HandleGetProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (products && products.length > 0) {
       fetchStats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products]);
 
   useEffect(() => {

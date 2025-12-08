@@ -329,7 +329,7 @@ function NavButton({ icon, label, active, onClick, badge }) {
 }
 
 // Overview Section
-function OverviewSection({ stats, orders, user, onNavigate }) {
+function OverviewSection({ stats, orders, onNavigate }) {
   const { wishlistCount } = useContext(ProductContext);
   const recentOrders = orders.slice(0, 5);
 
@@ -672,7 +672,7 @@ function WishlistSection() {
   );
 }
 
-function AddressesSection({ addresses, onRefresh }) {
+function AddressesSection({ addresses }) {
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
@@ -812,7 +812,7 @@ function InfoRow({ icon, label, value }) {
   );
 }
 
-function SettingsSection({ user }) {
+function SettingsSection() {
   const [showPasswordChange, setShowPasswordChange] = useState(false);
 
   return (
@@ -871,7 +871,7 @@ function PasswordChangeForm() {
       } else {
         toast.error(data.message || "Failed to change password");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred");
     }
   };
@@ -980,7 +980,7 @@ function OrderDetailsModal({ order, onClose }) {
           <div>
             <h3 className="font-semibold mb-4">Order Progress</h3>
             <div className="space-y-4">
-              {getOrderStages(order.status).map((stage, index) => (
+              {getOrderStages(order.status).map((stage) => (
                 <div key={stage.key} className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                     stage.completed ? 'bg-green-500 text-white' : 
@@ -1071,7 +1071,7 @@ function ReviewModal({ order, onClose, onSubmit }) {
       } else {
         toast.error(data.message || 'Failed to submit review');
       }
-    } catch (error) {
+    } catch {
       toast.error('An error occurred');
     } finally {
       setLoading(false);

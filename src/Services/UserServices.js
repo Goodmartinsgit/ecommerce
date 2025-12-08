@@ -93,7 +93,7 @@ export const loginUser = async (userData, userCart) => {
         const syncResults = await Promise.allSettled(
           userCart.filter(item => item && item.id).map(async item => {
             try {
-              const response = await axiosInstance.post('cart', {
+              await axiosInstance.post('cart', {
                 userid: decoded.id,
                 productid: item?.id,
                 color: item?.color,
