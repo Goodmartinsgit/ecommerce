@@ -411,36 +411,7 @@
 
 
 
-// OPTION 1: Fetch Payment Key from Backend API
-// This is the MOST SECURE approach - recommended for production
-
-// Create a new service file: Services/PaymentServices.js
-export const getPaymentConfig = async (token) => {
-  try {
-    const response = await fetch(`${baseUrl}/api/payment/config`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch payment configuration');
-    }
-    
-    const data = await response.json();
-    return {
-      publicKey: data.flutterwavePublicKey,
-      currency: data.currency || 'NGN'
-    };
-  } catch (error) {
-    console.error('Error fetching payment config:', error);
-    throw error;
-  }
-};
-
-// Updated Checkout Component with Backend API
+// Checkout Component with Backend API for Payment Configuration
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../shared/Layout/Layout";
@@ -450,6 +421,7 @@ import { toast } from "react-toastify";
 import { baseUrl } from "../config/config";
 import { addToCart as addToCartAPI } from "../Services/CartServices";
 import { getPaymentConfig } from "../Services/PaymentServices";
+
 
 const Checkout = () => {
   const { cartItems, isAuthenticated, user, token } = useContext(ProductContext);

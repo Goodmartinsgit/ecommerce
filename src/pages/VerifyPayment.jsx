@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCheckCircle, FaReceipt, FaArrowLeft } from "react-icons/fa";
@@ -36,7 +36,7 @@ export default function VerifyPayment() {
   const [isLoading, setIsLoading] = useState(true);
   const [receiptData, setReceiptData] = useState(null);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
-  const [showReceipt, setShowReceipt] = useState(false); // New state to toggle receipt view
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const transaction_id = searchParams.get("transaction_id");
   const status = searchParams.get("status");
@@ -60,7 +60,7 @@ export default function VerifyPayment() {
         return;
       }
 
-      const res = await fetch(`${baseUrl}/payment/verify?transaction_id=${transaction_id}&status=${status}&tx_ref=${txRef}`, {
+      const res = await fetch(`${baseUrl}payment/verify?transaction_id=${transaction_id}&status=${status}&tx_ref=${txRef}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -131,7 +131,7 @@ export default function VerifyPayment() {
             Verification Failed
           </h1>
           <p className="text-gray-600 mb-6 text-lg">
-            We couldn't verify your payment. Please contact support if the amount was deducted.
+            We couldn&apos;t verify your payment. Please contact support if the amount was deducted.
           </p>
           <motion.a
             href="/"
@@ -259,8 +259,8 @@ export default function VerifyPayment() {
                   <FaReceipt className="w-8 h-8" />
                 </div>
               </div>
-              <h1 className="text-4xl font-bold font-serif italic mb-2 text-black">Granduer</h1>
-              <p className="text-sm text-gray-500 mb-4">Fashion & Style Store</p>
+              <h1 className="text-4xl font-bold font-serif italic mb-2 text-black">Grandeur</h1>
+              <p className="text-sm text-gray-500 mb-4">Fashion &amp; Style Store</p>
               <h2 className="text-2xl font-bold mb-2">Payment Receipt</h2>
               <p className="text-gray-600">Transaction ID: {transaction_id}</p>
               <p className="text-sm text-gray-500">Date: {new Date().toLocaleDateString()} | Time: {new Date().toLocaleTimeString()}</p>
@@ -356,8 +356,8 @@ export default function VerifyPayment() {
             
             {/* Print Footer */}
             <div className="hidden print:block mt-8 text-center text-sm text-gray-500">
-              <p>Thank you for shopping with DESOBER!</p>
-              <p>Visit us at www.desober.com | Email: support@desober.com</p>
+              <p>Thank you for shopping with Grandeur!</p>
+              <p>Visit us at www.grandeur.com | Email: support@grandeur.com</p>
             </div>
           </motion.div>
         )}
@@ -365,5 +365,3 @@ export default function VerifyPayment() {
     </div>
   );
 }
-
-

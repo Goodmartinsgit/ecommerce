@@ -22,7 +22,7 @@ import ProtectedAdminRoute from "./components/ProtectedAdminRoute.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { ProductProvider } from "./context/NewProductContext.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
-import VerifyPayment from "./pages/VerrifyPayment.jsx";
+import VerifyPayment from "./pages/VerifyPayment.jsx";
 
 const router = createBrowserRouter([
   {
