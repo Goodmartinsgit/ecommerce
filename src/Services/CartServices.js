@@ -68,10 +68,10 @@ export const updateCart = async (userId, productId, size, color, quantity) => {
 };
 
 // Delete item from cart
-export const deleteFromCart = async (userId, productId) => {
+export const deleteFromCart = async (userId, productId, size = null, color = null) => {
   try {
     const response = await axiosInstance.delete(`cart/${userId}`, {
-      data: { productid: productId }
+      data: { productid: productId, size: size, color: color }
     });
 
     return { ok: true, data: response.data };

@@ -262,7 +262,7 @@ export const ProductProvider = ({ children }) => {
 
       try {
         
-        const response = await deleteFromCartAPI(user.id, item.id);
+        const response = await deleteFromCartAPI(user.id, item.id, item.size, item.color);
 
         if (response.ok) {
           await HandleGetCart();
