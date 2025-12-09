@@ -35,7 +35,7 @@ export const ProductProvider = ({ children }) => {
   const HandleGetCart = async () => {
     if (isAuthenticated && user) {
       try {
-        
+        const token = localStorage.getItem("token");
         const response = await getCartAPI(user.id, token);
 
         if (response.ok && response.data) {
@@ -67,7 +67,7 @@ export const ProductProvider = ({ children }) => {
     if (guestCart.length === 0) return;
 
     try {
-      
+      const token = localStorage.getItem("token");
       const serverCartResponse = await getCartAPI(user.id, token);
       const serverItems = serverCartResponse?.data?.productCarts || [];
       
@@ -103,14 +103,14 @@ export const ProductProvider = ({ children }) => {
     if (guestWishlist.length === 0) return;
 
     try {
-      
+      const token = localStorage.getItem("token");
       if (!token) return;
 
       // Get current server wishlist to avoid duplicates
       const serverWishlistResponse = await getWishlistAPI(token);
       const serverItems = serverWishlistResponse?.data?.data?.items || 
                           serverWishlistResponse?.data?.items || [];
-      const serverProductIds = serverItems.map(item => item.id);
+      const serverProductIds = serverItems.map(item => item.product?.id || item.productId);
 
       // Add guest wishlist items that don't exist on server
       for (const item of guestWishlist) {
@@ -139,9 +139,10 @@ export const ProductProvider = ({ children }) => {
       // OPTIMISTIC UPDATE: Update UI immediately
       const existingItemIndex = cartItems.findIndex(
         (item) => {
-          // Cart items use flat structure
-          return parseInt(item.id) === parseInt(prod.id) && item.size === size && item.color === color;
-          
+          const itemProductId = item.product?.id || item.productId;
+          const itemSize = item.selectedSize || item.size;
+          const itemColor = item.selectedColor || item.color;
+          return parseInt(itemProductId) === parseInt(prod.id) && itemSize === size && itemColor === color;
         }
       );
 
@@ -157,10 +158,11 @@ export const ProductProvider = ({ children }) => {
       } else {
         // Add new item with product structure matching server response
         const newItem = {
-          ...prod,
+          productId: prod.id,
+          product: prod,
           quantity: quantity,
-          size: size,
-          color: color
+          selectedSize: size,
+          selectedColor: color
         };
         optimisticCartItems = [...cartItems, newItem];
         toast.success("Item added to cart");
@@ -171,8 +173,8 @@ export const ProductProvider = ({ children }) => {
 
       // Make API call in background
       try {
-        
-        const response = await addToCartAPI(user.id, prod.id, size, color, quantity);
+        const token = localStorage.getItem("token");
+        const response = await addToCartAPI(user.id, prod.id, size, color, quantity, token);
 
         if (!response.ok) {
           // Rollback on error
@@ -219,12 +221,12 @@ export const ProductProvider = ({ children }) => {
       }
 
       try {
-        
+        const token = localStorage.getItem("token");
         const response = await updateCartAPI(
           user.id,
-          item.id,
-          updates.size || item.size,
-          updates.color || item.color,
+          item.product?.id || item.productId,
+          updates.size || item.selectedSize || item.size,
+          updates.color || item.selectedColor || item.color,
           updates.quantity || item.quantity,
           token
         );
@@ -262,8 +264,8 @@ export const ProductProvider = ({ children }) => {
       }
 
       try {
-        
-        const response = await deleteFromCartAPI(user.id, item.id, token);
+        const token = localStorage.getItem("token");
+        const response = await deleteFromCartAPI(user.id, item.product?.id || item.productId, token);
 
         if (response.ok) {
           await HandleGetCart();
@@ -321,7 +323,7 @@ export const ProductProvider = ({ children }) => {
     // Make API call in background for authenticated users
     if (isAuthenticated && user) {
       try {
-        
+        const token = localStorage.getItem("token");
         if (!token) {
           return;
         }
@@ -352,7 +354,7 @@ export const ProductProvider = ({ children }) => {
   const HandleGetWishlist = async () => {
     if (isAuthenticated && user) {
       try {
-        
+        const token = localStorage.getItem("token");
         if (!token) return wishlistItems;
         
         const response = await getWishlistAPI(token);
@@ -412,7 +414,7 @@ export const ProductProvider = ({ children }) => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    
+    const token = localStorage.getItem("token");
 
     if (storedUser && token) {
       try {
