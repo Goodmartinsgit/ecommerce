@@ -36,7 +36,7 @@ export const ProductProvider = ({ children }) => {
     if (isAuthenticated && user) {
       try {
         
-        const response = await getCartAPI(user.id, token);
+        const response = await getCartAPI(user.id);
 
         if (response.ok && response.data) {
           const serverCart = response.data.data || response.data;
@@ -68,7 +68,7 @@ export const ProductProvider = ({ children }) => {
 
     try {
       
-      const serverCartResponse = await getCartAPI(user.id, token);
+      const serverCartResponse = await getCartAPI(user.id);
       const serverItems = serverCartResponse?.data?.productCarts || [];
       
       for (const item of guestCart) {
@@ -225,8 +225,7 @@ export const ProductProvider = ({ children }) => {
           item.id,
           updates.size || item.size,
           updates.color || item.color,
-          updates.quantity || item.quantity,
-          token
+          updates.quantity || item.quantity
         );
 
         if (response.ok) {
@@ -263,7 +262,7 @@ export const ProductProvider = ({ children }) => {
 
       try {
         
-        const response = await deleteFromCartAPI(user.id, item.id, token);
+        const response = await deleteFromCartAPI(user.id, item.id);
 
         if (response.ok) {
           await HandleGetCart();
